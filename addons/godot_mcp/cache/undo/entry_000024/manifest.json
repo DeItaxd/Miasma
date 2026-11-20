@@ -1,0 +1,18 @@
+{
+  "args_summary": "batch_execute",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000024/files/scenes/brazier.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/brazier.tscn"
+    },
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000024/files/scenes/player.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/player.tscn"
+    }
+  ],
+  "id": "000024",
+  "timestamp": 1795195815.0,
+  "tool": "batch_execute"
+}

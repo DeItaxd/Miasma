@@ -1,0 +1,13 @@
+{
+  "args_summary": "set_node_properties(scene_path=res://scenes/player.tscn, node_path=.)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000014/files/scenes/player.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/player.tscn"
+    }
+  ],
+  "id": "000014",
+  "timestamp": 1795195706.0,
+  "tool": "set_node_properties"
+}

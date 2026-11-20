@@ -1,0 +1,13 @@
+{
+  "args_summary": "detach_script(scene_path=res://scenes/main.tscn, node_path=Ground)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000018/files/scenes/main.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/main.tscn"
+    }
+  ],
+  "id": "000018",
+  "timestamp": 1795195718.0,
+  "tool": "detach_script"
+}

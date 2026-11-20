@@ -1,0 +1,12 @@
+{
+  "args_summary": "write_file(path=res://assets/tiles/tileset.tres)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://assets/tiles/tileset.tres"
+    }
+  ],
+  "id": "000011",
+  "timestamp": 1795195690.0,
+  "tool": "write_file"
+}
