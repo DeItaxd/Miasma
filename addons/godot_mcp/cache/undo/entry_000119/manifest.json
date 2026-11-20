@@ -1,0 +1,12 @@
+{
+  "args_summary": "create_script(path=res://scripts/douser.gd)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scripts/douser.gd"
+    }
+  ],
+  "id": "000119",
+  "timestamp": 1795202066.0,
+  "tool": "create_script"
+}

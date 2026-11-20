@@ -1,0 +1,17 @@
+{
+  "args_summary": "rename_file(old_path=res://scripts/douser.gd, new_path=res://scripts/rat.gd)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000139/files/scripts/douser.gd",
+      "kind": "deleted",
+      "path": "res://scripts/douser.gd"
+    },
+    {
+      "kind": "created",
+      "path": "res://scripts/rat.gd"
+    }
+  ],
+  "id": "000139",
+  "timestamp": 1795202458.0,
+  "tool": "rename_file"
+}

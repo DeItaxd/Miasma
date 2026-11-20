@@ -1,0 +1,13 @@
+{
+  "args_summary": "add_node(scene_path=res://scenes/hud.tscn, node_name=GameOver, node_type=ColorRect)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000115/files/scenes/hud.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/hud.tscn"
+    }
+  ],
+  "id": "000115",
+  "timestamp": 1795201566.0,
+  "tool": "add_node"
+}

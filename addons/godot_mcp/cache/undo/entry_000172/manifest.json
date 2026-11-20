@@ -1,0 +1,12 @@
+{
+  "args_summary": "create_script(path=res://scripts/cough_cloud.gd)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scripts/cough_cloud.gd"
+    }
+  ],
+  "id": "000172",
+  "timestamp": 1795203772.0,
+  "tool": "create_script"
+}

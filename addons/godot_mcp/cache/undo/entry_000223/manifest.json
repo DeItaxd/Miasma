@@ -1,0 +1,17 @@
+{
+  "args_summary": "rename_file(old_path=res://addons/godot_mcp/cache/screenshots/doctor.png, new_path=res://assets/sprites/doctor.png)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000223/files/addons/godot_mcp/cache/screenshots/doctor.png",
+      "kind": "deleted",
+      "path": "res://addons/godot_mcp/cache/screenshots/doctor.png"
+    },
+    {
+      "kind": "created",
+      "path": "res://assets/sprites/doctor.png"
+    }
+  ],
+  "id": "000223",
+  "timestamp": 1795213054.0,
+  "tool": "rename_file"
+}

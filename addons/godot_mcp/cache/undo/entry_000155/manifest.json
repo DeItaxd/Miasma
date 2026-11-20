@@ -1,0 +1,13 @@
+{
+  "args_summary": "edit_script",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000155/files/scripts/brazier.gd",
+      "kind": "snapshot",
+      "path": "res://scripts/brazier.gd"
+    }
+  ],
+  "id": "000155",
+  "timestamp": 1795202847.0,
+  "tool": "edit_script"
+}

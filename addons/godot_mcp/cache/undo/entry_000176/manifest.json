@@ -1,0 +1,12 @@
+{
+  "args_summary": "write_file(path=res://scenes/cough_cloud.tscn)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scenes/cough_cloud.tscn"
+    }
+  ],
+  "id": "000176",
+  "timestamp": 1795203791.0,
+  "tool": "write_file"
+}

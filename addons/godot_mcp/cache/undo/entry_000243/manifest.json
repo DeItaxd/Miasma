@@ -1,0 +1,13 @@
+{
+  "args_summary": "edit_script",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000243/files/scripts/cough_cloud.gd",
+      "kind": "snapshot",
+      "path": "res://scripts/cough_cloud.gd"
+    }
+  ],
+  "id": "000243",
+  "timestamp": 1795214924.0,
+  "tool": "edit_script"
+}

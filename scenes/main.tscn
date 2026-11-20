@@ -25,6 +25,7 @@ position = Vector2(0, 8)
 position = Vector2(0, 96)
 
 [node name="HUD" parent="." unique_id=1648895620 instance=ExtResource("5_tbgi4")]
+process_mode = 0
 
 [node name="HerbSpawner" type="Node2D" parent="." unique_id=1063679128]
 script = ExtResource("6_tefeu")

@@ -1,0 +1,13 @@
+{
+  "args_summary": "set_node_properties(scene_path=res://scenes/hud.tscn, node_path=.)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000116/files/scenes/hud.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/hud.tscn"
+    }
+  ],
+  "id": "000116",
+  "timestamp": 1795201567.0,
+  "tool": "set_node_properties"
+}
