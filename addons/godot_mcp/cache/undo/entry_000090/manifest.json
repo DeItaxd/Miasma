@@ -1,0 +1,12 @@
+{
+  "args_summary": "create_scene(scene_path=res://scenes/herb.tscn)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scenes/herb.tscn"
+    }
+  ],
+  "id": "000090",
+  "timestamp": 1795200810.0,
+  "tool": "create_scene"
+}

@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://0h2qsvburq8p"]
+
+[ext_resource type="Script" uid="uid://ctfoqbxqut454" path="res://scripts/chory.gd" id="1_cinea"]
+
+[node name="Chory" type="CharacterBody2D" unique_id=1769122999]
+script = ExtResource("1_cinea")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1082255871]
+offset = Vector2(0, -16)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1026730103]
+position = Vector2(0, -6)

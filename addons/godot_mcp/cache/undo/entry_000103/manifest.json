@@ -1,0 +1,12 @@
+{
+  "args_summary": "create_script(path=res://scripts/enemy_spawner.gd)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scripts/enemy_spawner.gd"
+    }
+  ],
+  "id": "000103",
+  "timestamp": 1795201117.0,
+  "tool": "create_script"
+}

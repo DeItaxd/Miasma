@@ -1,0 +1,13 @@
+{
+  "args_summary": "instance_scene(scene_path=res://scenes/main.tscn, node_name=Chory)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000044/files/scenes/main.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/main.tscn"
+    }
+  ],
+  "id": "000044",
+  "timestamp": 1795197214.0,
+  "tool": "instance_scene"
+}

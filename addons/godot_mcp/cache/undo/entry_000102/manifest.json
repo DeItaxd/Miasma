@@ -1,0 +1,13 @@
+{
+  "args_summary": "edit_script",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000102/files/scripts/herb_spawner.gd",
+      "kind": "snapshot",
+      "path": "res://scripts/herb_spawner.gd"
+    }
+  ],
+  "id": "000102",
+  "timestamp": 1795201116.0,
+  "tool": "edit_script"
+}

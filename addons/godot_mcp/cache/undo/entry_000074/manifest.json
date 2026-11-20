@@ -1,0 +1,13 @@
+{
+  "args_summary": "attach_script(scene_path=res://scenes/brazier.tscn, node_path=.)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000074/files/scenes/brazier.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/brazier.tscn"
+    }
+  ],
+  "id": "000074",
+  "timestamp": 1795200366.0,
+  "tool": "attach_script"
+}

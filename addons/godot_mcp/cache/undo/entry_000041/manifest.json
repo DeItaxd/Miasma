@@ -1,0 +1,13 @@
+{
+  "args_summary": "add_node(scene_path=res://scenes/player.tscn, node_name=AttackPivot, node_type=Node2D)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000041/files/scenes/player.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/player.tscn"
+    }
+  ],
+  "id": "000041",
+  "timestamp": 1795197200.0,
+  "tool": "add_node"
+}

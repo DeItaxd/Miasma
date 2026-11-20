@@ -1,0 +1,12 @@
+{
+  "args_summary": "create_script(path=res://scripts/damage_popup.gd)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scripts/damage_popup.gd"
+    }
+  ],
+  "id": "000050",
+  "timestamp": 1795199269.0,
+  "tool": "create_script"
+}

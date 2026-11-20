@@ -1,0 +1,13 @@
+{
+  "args_summary": "remove_node(scene_path=res://scenes/main.tscn, node_path=Entities/Chory)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000105/files/scenes/main.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/main.tscn"
+    }
+  ],
+  "id": "000105",
+  "timestamp": 1795201131.0,
+  "tool": "remove_node"
+}

@@ -1,0 +1,12 @@
+{
+  "args_summary": "create_script(path=res://scripts/brazier.gd)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scripts/brazier.gd"
+    }
+  ],
+  "id": "000072",
+  "timestamp": 1795200358.0,
+  "tool": "create_script"
+}

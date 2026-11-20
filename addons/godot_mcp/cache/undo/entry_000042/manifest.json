@@ -1,0 +1,12 @@
+{
+  "args_summary": "create_scene(scene_path=res://scenes/chory.tscn)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scenes/chory.tscn"
+    }
+  ],
+  "id": "000042",
+  "timestamp": 1795197201.0,
+  "tool": "create_scene"
+}

@@ -1,0 +1,13 @@
+{
+  "args_summary": "set_node_groups(scene_path=res://scenes/brazier.tscn, node_path=.)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000092/files/scenes/brazier.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/brazier.tscn"
+    }
+  ],
+  "id": "000092",
+  "timestamp": 1795200819.0,
+  "tool": "set_node_groups"
+}

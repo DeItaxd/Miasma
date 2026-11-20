@@ -1,0 +1,13 @@
+{
+  "args_summary": "edit_script",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000064/files/scripts/player.gd",
+      "kind": "snapshot",
+      "path": "res://scripts/player.gd"
+    }
+  ],
+  "id": "000064",
+  "timestamp": 1795199565.0,
+  "tool": "edit_script"
+}

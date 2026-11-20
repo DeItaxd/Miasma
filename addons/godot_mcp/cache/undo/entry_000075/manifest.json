@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://shaders/miasma_zone.gdshader)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000075/files/shaders/miasma_zone.gdshader",
+      "kind": "snapshot",
+      "path": "res://shaders/miasma_zone.gdshader"
+    }
+  ],
+  "id": "000075",
+  "timestamp": 1795200774.0,
+  "tool": "write_file"
+}

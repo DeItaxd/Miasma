@@ -1,0 +1,12 @@
+{
+  "args_summary": "write_file(path=res://shaders/miasma_zone.gdshader)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://shaders/miasma_zone.gdshader"
+    }
+  ],
+  "id": "000071",
+  "timestamp": 1795200358.0,
+  "tool": "write_file"
+}

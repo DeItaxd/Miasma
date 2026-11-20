@@ -1,0 +1,13 @@
+{
+  "args_summary": "add_node(scene_path=res://scenes/brazier.tscn, node_name=MiasmaOverlay, node_type=ColorRect)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000073/files/scenes/brazier.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/brazier.tscn"
+    }
+  ],
+  "id": "000073",
+  "timestamp": 1795200363.0,
+  "tool": "add_node"
+}
