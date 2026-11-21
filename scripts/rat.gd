@@ -10,6 +10,7 @@ const DeathPuff := preload("res://scripts/death_puff.gd")
 @export var chew_time := 3.0
 @export var chew_amount := 15.0
 @export var chew_cooldown := 2.0
+@export var sprite_faces_left := true
 
 var health := 0
 var knockback := Vector2.ZERO
@@ -44,6 +45,7 @@ func _physics_process(delta: float) -> void:
 		if not at_fire:
 			windup = 0.0
 			move = to_brazier.normalized() * speed
+			face(to_brazier.normalized().x)
 		elif knockback == Vector2.ZERO and cooldown_timer == 0.0:
 			windup += delta
 			if windup >= chew_time:
@@ -55,6 +57,11 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
+func face(x: float) -> void:
+	if absf(x) > 0.25:
+		sprite.flip_h = (x > 0.0) == sprite_faces_left
+
+
 func update_windup_visual() -> void:
 	var active := windup > 0.0
 	bar.visible = active
@@ -63,6 +70,8 @@ func update_windup_visual() -> void:
 
 
 func take_hit(damage: int, push: Vector2) -> void:
+	if health <= 0:
+		return
 	health -= damage
 	knockback = push
 	windup = 0.0
@@ -70,5 +79,6 @@ func take_hit(damage: int, push: Vector2) -> void:
 	sprite.modulate = Color(10, 10, 10)
 	create_tween().tween_property(sprite, "modulate", Color.WHITE, 0.12)
 	if health <= 0:
+		get_tree().call_group("kill_counter", "add_kill")
 		DeathPuff.spawn(self, Color("8d7b6a"))
 		queue_free()

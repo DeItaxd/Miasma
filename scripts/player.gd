@@ -3,9 +3,11 @@ extends CharacterBody2D
 signal health_changed(current: int, maximum: int)
 signal herbs_changed(current: int, maximum: int)
 signal died
+signal hit_landed(count: int, heavy: bool)
 
 const ENEMY_MASK := 4
 const DamagePopup := preload("res://scripts/damage_popup.gd")
+const Juice := preload("res://scripts/juice.gd")
 const ThrownScythe := preload("res://scenes/thrown_scythe.tscn")
 
 @export var max_health := 10
@@ -100,7 +102,27 @@ const ThrownScythe := preload("res://scenes/thrown_scythe.tscn")
 @export var shake_decay := 12.0
 @export var face_hold := 0.3
 
+@export_group("Juice")
+@export var kick_light := 2.0
+@export var kick_heavy := 5.0
+@export var kick_decay := 14.0
+@export var zoom_punch := 0.08
+@export var zoom_decay := 8.0
+@export var kill_hitstop := 0.09
+@export var kill_shake := 3.0
+@export var spin_rumble := 0.7
+@export var trail_enabled := true
+@export var trail_life := 0.12
+@export var trail_color := Color(1.5, 1.6, 1.8, 0.3)
+@export var light_spark := Color(1.0, 1.0, 1.0)
+@export var light_squash := Vector2(1.12, 0.9)
+@export var heavy_squash := Vector2(1.28, 0.8)
+
 var shake := 0.0
+var kick := Vector2.ZERO
+var zoom_extra := 0.0
+var base_zoom := Vector2.ONE
+var hitstop_left := 0.0
 var current_heavy := false
 var in_safe_zone := false
 var time_since_hurt := 0.0
@@ -147,22 +169,40 @@ var swing_timer := 0.0
 func _ready() -> void:
 	health = max_health
 	spin_shape.radius = spin_radius
+	base_zoom = camera.zoom
 
 
 func _process(delta: float) -> void:
+	update_hitstop(delta)
 	shake = move_toward(shake, 0.0, shake_decay * delta)
-	camera.offset = Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
+	kick = kick.lerp(Vector2.ZERO, 1.0 - exp(-kick_decay * delta))
+	zoom_extra = lerpf(zoom_extra, 0.0, 1.0 - exp(-zoom_decay * delta))
+	camera.offset = kick + Vector2(randf_range(-shake, shake), randf_range(-shake, shake))
+	camera.zoom = base_zoom * (1.0 + zoom_extra)
 
 
 func add_shake(amount: float) -> void:
 	shake = maxf(shake, amount)
 
 
+func punch(dir: Vector2, strength: float, zoom: float) -> void:
+	kick = dir * strength
+	zoom_extra = maxf(zoom_extra, zoom)
+
+
 func hitstop(duration: float) -> void:
 	if duration <= 0.0:
 		return
+	hitstop_left = maxf(hitstop_left, duration)
 	Engine.time_scale = 0.05
-	get_tree().create_timer(duration, true, false, true).timeout.connect(func() -> void: Engine.time_scale = 1.0)
+
+
+func update_hitstop(delta: float) -> void:
+	if hitstop_left <= 0.0:
+		return
+	hitstop_left -= delta / maxf(Engine.time_scale, 0.001)
+	if hitstop_left <= 0.0:
+		Engine.time_scale = 1.0
 
 
 func _physics_process(delta: float) -> void:
@@ -221,10 +261,16 @@ func update_scythe(delta: float) -> void:
 		scythe_arm.scale = Vector2(swing_scale, -swing_scale)
 		scythe_arm.position = attack_pivot.position
 		scythe_sprite.position.x = swing_pivot_shift
+		if current_heavy:
+			add_shake(spin_rumble)
+		if trail_enabled:
+			Juice.ghost(scythe_sprite, trail_color, trail_life)
 	elif swing_timer < swing_time:
 		swing_timer += delta
 		var t := minf(swing_timer / swing_time, 1.0)
 		scythe_arm.rotation = lerpf(swing_from, swing_to, 1.0 - pow(1.0 - t, 3.0))
+		if trail_enabled:
+			Juice.ghost(scythe_sprite, trail_color, trail_life)
 	elif charging:
 		scythe_arm.rotation = lerp_angle(scythe_arm.rotation, aim().angle() - deg_to_rad(windup_angle), weight)
 		scythe_arm.scale = scythe_arm.scale.lerp(Vector2(1.0, -1.0), weight)
@@ -316,6 +362,7 @@ func start_attack() -> void:
 	already_hit.clear()
 	attack_dir = aim()
 	face(attack_dir)
+	Juice.squash(sprite, heavy_squash if heavy else light_squash, 0.3)
 	attack_pivot.rotation = attack_dir.angle()
 	velocity += attack_dir * (heavy_lunge if heavy else light_lunge)
 	start_swing(attack_dir.angle(), heavy_arc if heavy else light_arc, backhand == sprite.flip_h, active_timer, swing_scale if heavy else 1.0)
@@ -369,6 +416,12 @@ func begin_spin(damage: int, knockback: float, radius: float, duration: float, c
 	already_hit.clear()
 	attack_dir = aim()
 	attack_pivot.rotation = attack_dir.angle()
+	if heavy:
+		Juice.ring(self, attack_pivot.global_position, radius, spin_tint, 0.3, 3.0)
+		Juice.squash(sprite, heavy_squash, 0.35)
+		add_shake(heavy_shake * 0.6)
+	else:
+		Juice.ring(self, attack_pivot.global_position, radius, light_spark, 0.2, 2.0)
 
 
 func throw_scythe() -> void:
@@ -377,6 +430,11 @@ func throw_scythe() -> void:
 		end_charge()
 	var dir := aim()
 	face(dir)
+	Juice.squash(sprite, heavy_squash if toss else light_squash, 0.3)
+	if toss:
+		Juice.ring(self, attack_pivot.global_position + dir * 10.0, 16.0, toss_tint, 0.2, 2.5)
+		add_shake(heavy_shake * 0.5)
+		punch(dir, kick_light, 0.0)
 	has_scythe = false
 	combo_step = 0
 	combo_timer = 0.0
@@ -413,6 +471,9 @@ func catch_scythe(from_ground: bool) -> void:
 	combo_timer = catch_window
 	caught_combo = true
 	add_shake(0.6)
+	Juice.ring(self, attack_pivot.global_position, 18.0, Color(1.0, 0.95, 0.6), 0.25, 2.5)
+	Juice.sparks(self, attack_pivot.global_position, Vector2.ZERO, Color(1.0, 0.95, 0.6), 8, 140.0)
+	Juice.squash(sprite, Vector2(0.85, 1.2), 0.3)
 	sprite.modulate = catch_flash
 	create_tween().tween_property(sprite, "modulate", Color.WHITE, 0.2)
 
@@ -428,7 +489,8 @@ func check_hits() -> void:
 		query.transform = Transform2D(attack_dir.angle(), attack_pivot.global_position + attack_dir * current_reach)
 	query.collision_mask = ENEMY_MASK
 	query.collide_with_areas = true
-	var landed := false
+	var landed := 0
+	var killed := false
 	for hit in get_world_2d().direct_space_state.intersect_shape(query, 16):
 		var body: Object = hit["collider"]
 		if body in already_hit or not body.has_method("take_hit"):
@@ -441,7 +503,37 @@ func check_hits() -> void:
 			body.reflect(push)
 		else:
 			body.take_hit(current_damage, push * current_knockback)
-		landed = true
-	if landed:
-		add_shake(heavy_shake if current_heavy else light_shake)
-		hitstop(heavy_hitstop if current_heavy else light_hitstop)
+			if body is CharacterBody2D:
+				impact(body, push, hit_color(), current_heavy)
+				killed = killed or body.is_queued_for_deletion()
+		landed += 1
+	if landed > 0:
+		add_shake(kill_shake if killed else (heavy_shake if current_heavy else light_shake))
+		hitstop(maxf(kill_hitstop if killed else 0.0, heavy_hitstop if current_heavy else light_hitstop))
+		punch(attack_dir, kick_heavy if current_heavy or killed else kick_light, zoom_punch if current_heavy or killed else 0.0)
+		hit_landed.emit(landed, current_heavy)
+
+
+func hit_color() -> Color:
+	if spinning and current_heavy:
+		return spin_tint
+	return heavy_tint if current_heavy else light_spark
+
+
+func impact(body: Node2D, push: Vector2, color: Color, heavy: bool) -> void:
+	var at := body.global_position + Vector2(0, -8)
+	Juice.sparks(self, at, push, color, 14 if heavy else 8, 260.0 if heavy else 200.0)
+	Juice.squash(body.get_node_or_null("Sprite2D"), Vector2(0.65, 1.35) if heavy else Vector2(0.8, 1.2), 0.3)
+	if heavy or body.is_queued_for_deletion():
+		Juice.ring(self, at, 22.0 if heavy else 16.0, color, 0.22, 2.5)
+
+
+func on_scythe_hit(body: Node2D, push: Vector2, heavy: bool) -> void:
+	var color := toss_tint if heavy else light_spark
+	impact(body, push.normalized(), color, heavy)
+	var killed := body.is_queued_for_deletion()
+	add_shake(kill_shake if killed else 1.5)
+	if killed:
+		hitstop(kill_hitstop)
+	punch(push.normalized(), kick_heavy if killed else kick_light, zoom_punch if killed else 0.0)
+	hit_landed.emit(1, heavy)

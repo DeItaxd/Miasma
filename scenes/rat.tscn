@@ -13,15 +13,16 @@ motion_mode = 1
 script = ExtResource("1_x7xrk")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2034935433]
+scale = Vector2(0.2, 0.2)
 texture = ExtResource("2_7o8g1")
-offset = Vector2(0, -16)
+offset = Vector2(0, -22)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1603962463]
 position = Vector2(0, -6)
 shape = SubResource("CircleShape2D_7o8g1")
 
 [node name="WindupBar" type="Node2D" parent="." unique_id=1778500719]
-position = Vector2(0, -20)
+position = Vector2(0, -16)
 
 [node name="Bg" type="ColorRect" parent="WindupBar" unique_id=1547048140]
 offset_left = -12.0

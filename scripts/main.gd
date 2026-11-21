@@ -6,10 +6,12 @@ const SAVE_PATH := "user://best.cfg"
 
 var elapsed := 0.0
 var is_over := false
+var kills := 0
 var brazier
 
 
 func _ready() -> void:
+	add_to_group("kill_counter")
 	brazier = get_tree().get_first_node_in_group("brazier")
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
@@ -18,6 +20,11 @@ func _ready() -> void:
 
 func _on_player_died() -> void:
 	end_game("THE HAZE TOOK YOU" if brazier and brazier.is_out else "YOU DIED")
+
+
+func add_kill() -> void:
+	if not is_over:
+		kills += 1
 
 
 func _physics_process(delta: float) -> void:

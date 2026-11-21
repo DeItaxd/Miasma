@@ -2,6 +2,8 @@ extends Area2D
 
 enum State { OUT, RETURN, GROUND }
 
+const Juice := preload("res://scripts/juice.gd")
+
 var thrower: Node2D
 var direction := Vector2.RIGHT
 var speed := 340.0
@@ -31,6 +33,8 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if state != State.GROUND:
+		Juice.ghost(sprite, Color(tint.r, tint.g, tint.b, 0.35), 0.1, 59)
 	match state:
 		State.OUT:
 			var step := direction * speed * delta
@@ -64,9 +68,10 @@ func _on_body_entered(body: Node2D) -> void:
 		if body in hit_bodies:
 			return
 		hit_bodies.append(body)
-		body.take_hit(damage, push_for(body))
+		var push := push_for(body)
+		body.take_hit(damage, push)
 		if is_instance_valid(thrower):
-			thrower.add_shake(1.5)
+			thrower.on_scythe_hit(body, push, piercing)
 		if state == State.OUT and not piercing:
 			state = State.RETURN
 	elif state == State.OUT:

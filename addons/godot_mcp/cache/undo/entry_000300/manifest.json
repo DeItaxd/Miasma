@@ -1,0 +1,12 @@
+{
+  "args_summary": "write_file(path=res://scripts/juice.gd)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scripts/juice.gd"
+    }
+  ],
+  "id": "000300",
+  "timestamp": 1795218235.0,
+  "tool": "write_file"
+}
