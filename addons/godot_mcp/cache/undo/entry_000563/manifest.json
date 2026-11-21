@@ -1,0 +1,13 @@
+{
+  "args_summary": "edit_script",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000563/files/shaders/rock.gdshader",
+      "kind": "snapshot",
+      "path": "res://shaders/rock.gdshader"
+    }
+  ],
+  "id": "000563",
+  "timestamp": 1795237681.0,
+  "tool": "edit_script"
+}

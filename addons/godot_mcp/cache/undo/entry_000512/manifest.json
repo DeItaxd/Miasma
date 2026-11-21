@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://scripts/music.gd)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000512/files/scripts/music.gd",
+      "kind": "snapshot",
+      "path": "res://scripts/music.gd"
+    }
+  ],
+  "id": "000512",
+  "timestamp": 1795233872.0,
+  "tool": "write_file"
+}

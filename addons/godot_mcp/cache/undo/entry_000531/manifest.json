@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://assets/sprites/mint.png.import)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000531/files/assets/sprites/mint.png.import",
+      "kind": "snapshot",
+      "path": "res://assets/sprites/mint.png.import"
+    }
+  ],
+  "id": "000531",
+  "timestamp": 1795234469.0,
+  "tool": "write_file"
+}

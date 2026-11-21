@@ -5,7 +5,7 @@ uniform float radius = 288.0;
 uniform float time = 0.0;
 uniform float jag = 16.0;
 uniform float blend = 16.0;
-uniform float pixel_size = 1.0;
+uniform float pixel_size = 0.0;
 uniform vec4 tint : source_color = vec4(0.55, 0.48, 0.16, 0.42);
 uniform sampler2D fog_noise : repeat_enable, filter_linear;
 uniform float fog_size = 420.0;

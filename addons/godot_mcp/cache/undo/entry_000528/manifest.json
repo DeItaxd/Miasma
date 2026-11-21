@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://assets/sprites/rat.png.import)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000528/files/assets/sprites/rat.png.import",
+      "kind": "snapshot",
+      "path": "res://assets/sprites/rat.png.import"
+    }
+  ],
+  "id": "000528",
+  "timestamp": 1795234467.0,
+  "tool": "write_file"
+}

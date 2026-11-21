@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://assets/sprites/scythe.png.import)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000529/files/assets/sprites/scythe.png.import",
+      "kind": "snapshot",
+      "path": "res://assets/sprites/scythe.png.import"
+    }
+  ],
+  "id": "000529",
+  "timestamp": 1795234468.0,
+  "tool": "write_file"
+}

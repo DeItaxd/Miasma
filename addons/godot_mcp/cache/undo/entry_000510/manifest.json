@@ -1,0 +1,12 @@
+{
+  "args_summary": "create_script(path=res://scripts/music.gd)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://scripts/music.gd"
+    }
+  ],
+  "id": "000510",
+  "timestamp": 1795233673.0,
+  "tool": "create_script"
+}

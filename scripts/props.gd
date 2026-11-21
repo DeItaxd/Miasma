@@ -17,6 +17,7 @@ const WALL := Vector2i(2, 0)
 
 var trees: Array[Dictionary] = []
 var player: Node2D
+var grime: NoiseTexture2D
 
 
 static func blocked(tree: SceneTree, pos: Vector2, margin: float) -> bool:
@@ -28,6 +29,15 @@ static func blocked(tree: SceneTree, pos: Vector2, margin: float) -> bool:
 
 func build(ground: TileMapLayer, entities: Node2D, brazier: Node2D) -> void:
 	player = get_tree().get_first_node_in_group("player")
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.frequency = 0.03
+	noise.fractal_octaves = 3
+	grime = NoiseTexture2D.new()
+	grime.width = 256
+	grime.height = 256
+	grime.seamless = true
+	grime.noise = noise
 	var used := ground.get_used_rect()
 	for cell in ground.get_used_cells():
 		if ground.get_cell_atlas_coords(cell) != WALL:
@@ -95,6 +105,7 @@ func make_visual(body: Node2D, shader: Shader, size: Vector2, anchor: float) -> 
 	look.shader = shader
 	look.set_shader_parameter("size", size)
 	look.set_shader_parameter("seed", randf() * 100.0)
+	look.set_shader_parameter("grime_tex", grime)
 	visual.material = look
 	body.add_child(visual)
 	return visual
@@ -107,7 +118,7 @@ func add_rock(entities: Node2D, pos: Vector2, radius: float) -> void:
 
 func add_tree(entities: Node2D, pos: Vector2, canopy: float) -> void:
 	var body := make_body(entities, pos, maxf(5.0, canopy * 0.2), canopy * 0.6)
-	var visual := make_visual(body, TreeShader, Vector2(canopy * 3.2, canopy * 2.6).round(), 0.94)
+	var visual := make_visual(body, TreeShader, Vector2(canopy * 3.2, canopy * 2.85).round(), 0.86)
 	trees.append({"body": body, "visual": visual, "canopy": canopy})
 
 

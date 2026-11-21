@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://assets/sprites/rosemary.png.import)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000532/files/assets/sprites/rosemary.png.import",
+      "kind": "snapshot",
+      "path": "res://assets/sprites/rosemary.png.import"
+    }
+  ],
+  "id": "000532",
+  "timestamp": 1795234470.0,
+  "tool": "write_file"
+}

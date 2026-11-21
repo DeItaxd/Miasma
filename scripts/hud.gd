@@ -212,6 +212,9 @@ func start_game() -> void:
 	title_seen = true
 	title.visible = false
 	get_tree().paused = false
+	var music := get_node_or_null("/root/Music")
+	if music:
+		music.start()
 
 
 func build_combo() -> void:
@@ -422,11 +425,19 @@ func build_pause_menu() -> void:
 func set_paused(value: bool) -> void:
 	pause_menu.visible = value
 	get_tree().paused = value
+	muffle_music(value)
+
+
+func muffle_music(value: bool) -> void:
+	var music := get_node_or_null("/root/Music")
+	if music:
+		music.set_muffled(value)
 
 
 func restart() -> void:
 	Engine.time_scale = 1.0
 	get_tree().paused = false
+	muffle_music(false)
 	get_tree().reload_current_scene()
 
 

@@ -42,9 +42,19 @@ func setup_ground() -> void:
 	texture.height = 256
 	texture.seamless = true
 	texture.noise = noise
+	var smooth := FastNoiseLite.new()
+	smooth.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	smooth.frequency = 0.015
+	smooth.fractal_octaves = 1
+	var shapes := NoiseTexture2D.new()
+	shapes.width = 256
+	shapes.height = 256
+	shapes.seamless = true
+	shapes.noise = smooth
 	var ground_material := ShaderMaterial.new()
 	ground_material.shader = GroundShader
 	ground_material.set_shader_parameter("noise_tex", texture)
+	ground_material.set_shader_parameter("shape_tex", shapes)
 	$Ground.material = ground_material
 
 
