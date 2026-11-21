@@ -3,7 +3,7 @@ extends Area2D
 const DeathPuff := preload("res://scripts/death_puff.gd")
 
 @export var speed := 130.0
-@export var damage := 1
+@export var damage := 10
 @export var lifetime := 4.0
 @export var reflect_speed := 1.6
 @export var reflect_damage := 2

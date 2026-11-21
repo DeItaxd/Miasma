@@ -9,9 +9,14 @@ const ENEMY_MASK := 4
 const DamagePopup := preload("res://scripts/damage_popup.gd")
 const Juice := preload("res://scripts/juice.gd")
 const ThrownScythe := preload("res://scenes/thrown_scythe.tscn")
+const SwingSound := preload("res://assets/sounds/sound effects/swing.mp3")
+const ThrowSound := preload("res://assets/sounds/sound effects/throw.mp3")
+const PickupSound := preload("res://assets/sounds/sound effects/pickup.mp3")
+const HitSound := preload("res://assets/sounds/sound effects/hit.mp3")
+const PunchSound := preload("res://assets/sounds/sound effects/punch.mp3")
 
-@export var max_health := 10
-@export var invulnerable_time := 0.6
+@export var max_health := 100
+@export var invulnerable_time := 0.5
 @export var max_carry := 3
 
 @export var max_speed := 140.0
@@ -91,7 +96,7 @@ const ThrownScythe := preload("res://scenes/thrown_scythe.tscn")
 @export_group("Regen")
 @export var regen_delay := 2.0
 @export var regen_interval := 1.0
-@export var regen_amount := 1
+@export var regen_amount := 4
 
 @export_group("Feel")
 @export var hurt_shake := 3.0
@@ -101,6 +106,82 @@ const ThrownScythe := preload("res://scenes/thrown_scythe.tscn")
 @export var heavy_hitstop := 0.07
 @export var shake_decay := 12.0
 @export var face_hold := 0.3
+
+@export_group("Dash")
+@export var dash_speed := 420.0
+@export var dash_time := 0.14
+@export var dash_cooldown := 0.7
+@export var dash_iframes := 0.22
+@export var dash_through_enemies := true
+@export var dash_color := Color(0.8, 0.92, 1.0, 0.55)
+@export var dash_dust := Color(0.75, 0.68, 0.55)
+
+@export_group("Chase Boost")
+@export var chase_multiplier := 1.45
+@export var chase_accel_multiplier := 1.6
+@export var chase_angle := 0.5
+@export var boost_color := Color(1.0, 0.9, 0.55, 0.7)
+
+@export_group("Lifesteal")
+@export var chain_time := 1.6
+@export var lifesteal_per_hit := 0.4
+@export var lifesteal_per_kill := 1.5
+@export var lifesteal_tiers := PackedInt32Array([8, 15, 25])
+@export var lifesteal_multipliers := PackedFloat32Array([1.5, 2.25, 3.0])
+@export var lifesteal_cap := 10.0
+@export var lifesteal_flush := 0.25
+@export var lifesteal_color := Color(0.55, 1.0, 0.45)
+
+@export_group("Rend")
+@export var rend_window := 0.3
+@export var rend_damage := 2
+@export var rend_knockback := 260.0
+@export var rend_radius := 16.0
+@export var rend_stagger := 0.05
+@export var rend_cooldown := 0.35
+@export var rend_color := Color(1.0, 0.96, 0.85)
+
+@export_group("Chain Dash")
+@export var chain_dashes := 3
+@export var chain_dash_cooldown := 0.06
+@export var rend_chain_bonus := 1
+@export var chain_color := Color(1.0, 0.95, 0.7)
+
+@export_group("Ricochet")
+@export var ricochet_bounces := 4
+@export var ricochet_range := 140.0
+@export var ricochet_damage := 2
+@export var ricochet_damage_step := 1
+@export var ricochet_speed := 480.0
+@export var ricochet_knockback := 160.0
+@export var ricochet_tint := Color(1.0, 0.6, 0.4)
+
+@export_group("Pounce")
+@export var pounce_grace := 0.15
+@export var pounce_damage := 3
+@export var pounce_radius := 62.0
+@export var pounce_knockback := 480.0
+@export var pounce_time := 0.32
+@export var pounce_tint := Color(1.0, 0.85, 0.4)
+
+@export_group("Buzzsaw")
+@export var buzz_damage := 1
+@export var buzz_speed := 200.0
+@export var buzz_range := 150.0
+@export var buzz_hover := 0.6
+@export var buzz_rehit := 0.15
+@export var buzz_knockback := 140.0
+@export var buzz_spin := 40.0
+@export var buzz_size := 1.7
+@export var buzz_tint := Color(0.7, 0.9, 1.0)
+
+@export_group("Sound")
+@export var swing_volume := 0.0
+@export var throw_volume := 0.0
+@export var pickup_volume := 0.0
+@export var hit_volume := 0.0
+@export var punch_volume := 0.0
+@export var pitch_spread := 0.08
 
 @export_group("Juice")
 @export var kick_light := 2.0
@@ -165,11 +246,78 @@ var swing_timer := 0.0
 @onready var scythe_arm: Node2D = $ScytheArm
 @onready var scythe_sprite: Sprite2D = $ScytheArm/Scythe
 
+var dash_timer := 0.0
+var dash_cool := 0.0
+var dash_dir := Vector2.RIGHT
+var boosting := false
+var trail_tick := 0
+var boost_trail: CPUParticles2D
+var chain := 0
+var chain_left := 0.0
+var heal_bank := 0.0
+var heal_budget := 0.0
+var heal_flush_left := 0.0
+var rend_timer := 0.0
+var rend_targets := []
+var rend_shape := CircleShape2D.new()
+var dash_path := PackedVector2Array()
+var dash_chain := 0
+var dash_hits_before := 0
+var holding := false
+var pounce_timer := 0.0
+var sfx_swing: AudioStreamPlayer
+var sfx_throw: AudioStreamPlayer
+var sfx_pickup: AudioStreamPlayer
+var sfx_hit: AudioStreamPlayer
+var sfx_punch: AudioStreamPlayer
+
 
 func _ready() -> void:
 	health = max_health
 	spin_shape.radius = spin_radius
 	base_zoom = camera.zoom
+	sfx_swing = make_sound(SwingSound, swing_volume)
+	sfx_throw = make_sound(ThrowSound, throw_volume)
+	sfx_pickup = make_sound(PickupSound, pickup_volume)
+	sfx_hit = make_sound(HitSound, hit_volume)
+	sfx_punch = make_sound(PunchSound, punch_volume)
+	boost_trail = CPUParticles2D.new()
+	boost_trail.emitting = false
+	boost_trail.amount = 28
+	boost_trail.lifetime = 0.35
+	boost_trail.local_coords = false
+	boost_trail.texture = Juice.streak_texture()
+	boost_trail.particle_flag_align_y = true
+	boost_trail.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	boost_trail.emission_sphere_radius = 7.0
+	boost_trail.gravity = Vector2.ZERO
+	boost_trail.spread = 12.0
+	boost_trail.initial_velocity_min = 30.0
+	boost_trail.initial_velocity_max = 70.0
+	boost_trail.scale_amount_min = 0.8
+	boost_trail.scale_amount_max = 1.4
+	var fade := Gradient.new()
+	fade.set_color(0, Color.WHITE)
+	fade.set_color(1, Color(1, 1, 1, 0))
+	boost_trail.color_ramp = fade
+	boost_trail.position = Vector2(0, -8)
+	add_child(boost_trail)
+	move_child(boost_trail, 0)
+
+
+func make_sound(stream: AudioStream, volume: float) -> AudioStreamPlayer:
+	var sound := AudioStreamPlayer.new()
+	sound.stream = stream
+	sound.volume_db = volume
+	sound.max_polyphony = 4
+	sound.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(sound)
+	return sound
+
+
+func play_sound(sound: AudioStreamPlayer, pitch := 1.0) -> void:
+	sound.pitch_scale = pitch * randf_range(1.0 - pitch_spread, 1.0 + pitch_spread)
+	sound.play()
 
 
 func _process(delta: float) -> void:
@@ -205,38 +353,217 @@ func update_hitstop(delta: float) -> void:
 		Engine.time_scale = 1.0
 
 
+func chasing(input: Vector2) -> bool:
+	if has_scythe or input == Vector2.ZERO:
+		return false
+	var scythe := get_tree().get_first_node_in_group("thrown_scythe") as Node2D
+	if scythe == null or scythe.is_queued_for_deletion():
+		return false
+	var to := scythe.global_position - global_position
+	return to.length() > 10.0 and input.normalized().dot(to.normalized()) > chase_angle
+
+
+func start_dash(input: Vector2) -> void:
+	var chained := rend_timer > 0.0 and dash_chain > 0
+	dash_dir = input.normalized() if input != Vector2.ZERO else aim()
+	dash_timer = dash_time
+	dash_cool = dash_cooldown
+	invulnerable_timer = maxf(invulnerable_timer, dash_iframes)
+	if not chained:
+		rend_targets.clear()
+		dash_chain = 0
+		dash_path = PackedVector2Array([global_position])
+	rend_timer = 0.0
+	dash_hits_before = rend_targets.size()
+	if charging:
+		end_charge()
+	if dash_through_enemies:
+		set_collision_mask_value(3, false)
+	if dash_dir.x != 0.0:
+		sprite.flip_h = dash_dir.x < 0.0
+	var feet := global_position + Vector2(0, -3)
+	Juice.sparks(self, feet, -dash_dir, dash_dust, 14, 170.0)
+	Juice.ring(self, feet, 14.0, dash_color, 0.22, 2.0)
+	Juice.squash(sprite, Vector2(1.3, 0.75), 0.25)
+	punch(dash_dir, kick_light, 0.0)
+	add_shake(0.6)
+	play_sound(sfx_swing, 1.45)
+
+
+func end_dash() -> void:
+	dash_timer = 0.0
+	velocity = dash_dir * max_speed
+	set_collision_mask_value(3, true)
+	rend_timer = rend_window
+	pounce_timer = pounce_grace
+	dash_path.append(global_position)
+	if rend_targets.size() > dash_hits_before and dash_chain < chain_dashes:
+		dash_chain += 1
+		dash_cool = chain_dash_cooldown
+		Juice.ring(self, global_position + Vector2(0, -8), 10.0 + 4.0 * dash_chain, chain_color, 0.2, 2.0)
+		play_sound(sfx_pickup, 1.3 + 0.15 * dash_chain)
+
+
+func collect_rend_targets() -> void:
+	rend_shape.radius = rend_radius
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = rend_shape
+	query.transform = Transform2D(0.0, global_position + Vector2(0, -6))
+	query.collision_mask = ENEMY_MASK
+	for hit in get_world_2d().direct_space_state.intersect_shape(query, 16):
+		var body: Object = hit["collider"]
+		if body is CharacterBody2D and body.has_method("take_hit") and body not in rend_targets:
+			rend_targets.append(body)
+
+
+func can_rend() -> bool:
+	return rend_timer > 0.0 and rend_targets.any(alive)
+
+
+func alive(target) -> bool:
+	return is_instance_valid(target) and not target.is_queued_for_deletion()
+
+
+func rend() -> void:
+	var targets := rend_targets.filter(alive)
+	rend_targets.clear()
+	rend_timer = 0.0
+	pounce_timer = 0.0
+	combo_step = 0
+	combo_timer = 0.0
+	attack_timer = rend_cooldown
+	var line_dir := dash_dir
+	var points := dash_path.size()
+	if points >= 2 and dash_path[points - 1].distance_to(dash_path[points - 2]) > 1.0:
+		line_dir = (dash_path[points - 1] - dash_path[points - 2]).normalized()
+	var bonus := rend_chain_bonus * dash_chain
+	dash_chain = 0
+	face(line_dir)
+	start_swing(line_dir.angle(), heavy_arc, sprite.flip_h, 0.2, swing_scale)
+	play_sound(sfx_swing, 0.7)
+	Juice.squash(sprite, heavy_squash, 0.3)
+	for i in points - 1:
+		Juice.slash(self, dash_path[i] + Vector2(0, -8), dash_path[i + 1] + Vector2(0, -8), rend_color, 5.0, 0.25 + 0.05 * i)
+	add_shake(1.2 + 0.4 * bonus)
+	for i in targets.size():
+		var last := i == targets.size() - 1
+		get_tree().create_timer(rend_stagger * (i + 1), false).timeout.connect(rend_cut.bind(targets[i], line_dir, last, bonus))
+
+
+func rend_cut(victim, dir: Vector2, last: bool, bonus: int) -> void:
+	if not alive(victim):
+		return
+	var target: Node2D = victim
+	var at := target.global_position + Vector2(0, -8)
+	var cut := dir.orthogonal().rotated(0.6) * 13.0
+	target.take_hit(rend_damage + bonus, dir * rend_knockback)
+	Juice.slash(self, at - cut, at + cut, rend_color, 4.0, 0.2)
+	impact(target, dir, rend_color, true)
+	var killed := target.is_queued_for_deletion()
+	register_hits(1, 1 if killed else 0, true)
+	play_sound(sfx_hit, 0.8 if last else 1.1)
+	add_shake(kill_shake if last else 1.5)
+	if last:
+		hitstop(heavy_hitstop * 1.5)
+		punch(dir, kick_heavy, zoom_punch)
+
+
+func pounce() -> void:
+	if dash_timer > 0.0:
+		end_dash()
+	dash_cool = 0.0
+	pounce_timer = 0.0
+	rend_timer = 0.0
+	dash_chain = 0
+	combo_step = 0
+	combo_timer = 0.0
+	caught_combo = false
+	play_sound(sfx_swing, 0.65)
+	begin_spin(pounce_damage, pounce_knockback, pounce_radius, pounce_time, pounce_time, true)
+	var feet := global_position + Vector2(0, -4)
+	Juice.ring(self, feet, pounce_radius * 1.3, pounce_tint, 0.35, 4.0)
+	Juice.sparks(self, feet, Vector2.ZERO, pounce_tint, 18, 260.0)
+	hitstop(0.06)
+	add_shake(heavy_shake)
+	punch(dash_dir, kick_heavy, zoom_punch)
+
+
+func update_trail() -> void:
+	var dashing := dash_timer > 0.0
+	var fast := boosting and velocity.length() > max_speed * 0.8
+	boost_trail.emitting = dashing or fast
+	if velocity.length() > 1.0:
+		boost_trail.direction = -velocity.normalized()
+	boost_trail.color = dash_color if dashing else boost_color
+	trail_tick += 1
+	if dashing:
+		Juice.ghost(sprite, dash_color, 0.2)
+		if scythe_arm.visible:
+			Juice.ghost(scythe_sprite, dash_color, 0.2)
+	elif fast and trail_tick % 4 == 0:
+		Juice.ghost(sprite, Color(boost_color.r, boost_color.g, boost_color.b, 0.3), 0.15)
+
+
 func _physics_process(delta: float) -> void:
 	invulnerable_timer = maxf(invulnerable_timer - delta, 0.0)
 	time_since_hurt += delta
 	update_regen(delta)
 	attack_timer = maxf(attack_timer - delta, 0.0)
 	combo_timer = maxf(combo_timer - delta, 0.0)
-	buffer_timer = maxf(buffer_timer - delta, 0.0)
+	if dash_timer <= 0.0:
+		buffer_timer = maxf(buffer_timer - delta, 0.0)
 	throw_buffer = maxf(throw_buffer - delta, 0.0)
 	face_timer = maxf(face_timer - delta, 0.0)
+	rend_timer = maxf(rend_timer - delta, 0.0)
+	pounce_timer = maxf(pounce_timer - delta, 0.0)
+	update_chain(delta)
+	update_lifesteal(delta)
 	if Input.is_action_just_pressed("attack"):
 		buffer_timer = input_buffer_time
+	if not Input.is_action_pressed("attack"):
+		holding = false
 	if Input.is_action_just_pressed("throw"):
 		throw_buffer = input_buffer_time
-	if throw_buffer > 0.0 and has_scythe and active_timer <= 0.0:
+	if throw_buffer > 0.0 and has_scythe and (active_timer <= 0.0 or (spinning and current_heavy)):
 		throw_buffer = 0.0
 		throw_scythe()
 	if charging:
 		update_charge(delta)
+	elif dash_timer > 0.0:
+		pass
+	elif has_scythe and buffer_timer > 0.0 and can_rend():
+		buffer_timer = 0.0
+		rend()
 	elif has_scythe and buffer_timer > 0.0 and attack_timer == 0.0:
 		buffer_timer = 0.0
-		if combo_step == 2 and combo_timer > 0.0:
-			charging = true
-			charge_time = 0.0
-		else:
-			start_attack()
+		start_attack()
+		holding = true
+	elif holding and has_scythe and attack_timer == 0.0 and active_timer <= 0.0:
+		charging = true
+		charge_time = 0.0
 	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	if input != Vector2.ZERO:
-		facing = input.normalized()
-		velocity = velocity.move_toward(input * max_speed, acceleration * delta)
+	dash_cool = maxf(dash_cool - delta, 0.0)
+	if Input.is_action_just_pressed("dash") and dash_cool == 0.0 and dash_timer <= 0.0:
+		start_dash(input)
+	var dashing_now := dash_timer > 0.0
+	if dash_timer > 0.0:
+		dash_timer -= delta
+		velocity = dash_dir * dash_speed
+		if dash_timer <= 0.0:
+			end_dash()
 	else:
-		velocity = velocity.move_toward(Vector2.ZERO, friction * delta)
+		boosting = chasing(input)
+		var top_speed := max_speed * (chase_multiplier if boosting else 1.0)
+		var accel := acceleration * (chase_accel_multiplier if boosting else 1.0)
+		if input != Vector2.ZERO:
+			facing = input.normalized()
+			velocity = velocity.move_toward(input * top_speed, accel * delta)
+		else:
+			velocity = velocity.move_toward(Vector2.ZERO, friction * delta)
 	move_and_slide()
+	if dashing_now:
+		collect_rend_targets()
+	update_trail()
 	if spinning:
 		sprite.flip_h = cos(attack_pivot.rotation) < 0.0
 	elif face_timer == 0.0 and input.x != 0.0:
@@ -298,11 +625,14 @@ func start_swing(center: float, arc: float, clockwise: bool, duration: float, si
 	scythe_sprite.position.x = swing_pivot_shift
 
 
-func take_damage(amount: int) -> void:
-	if invulnerable_timer > 0.0 or health <= 0:
+func take_damage(amount: int, from_haze := false) -> void:
+	if health <= 0 or (invulnerable_timer > 0.0 and not from_haze):
 		return
+	if not from_haze:
+		play_sound(sfx_punch)
+		chain = 0
+		invulnerable_timer = invulnerable_time
 	health = maxi(health - amount, 0)
-	invulnerable_timer = invulnerable_time
 	time_since_hurt = 0.0
 	health_changed.emit(health, max_health)
 	DamagePopup.spawn(self, amount, Color("ff5a4f"))
@@ -323,10 +653,51 @@ func update_regen(delta: float) -> void:
 		heal(regen_amount)
 
 
-func heal(amount: int) -> void:
+func heal(amount: int, color := Color("7ed957")) -> void:
 	health = mini(health + amount, max_health)
 	health_changed.emit(health, max_health)
-	DamagePopup.spawn(self, "+%d" % amount, Color("7ed957"))
+	DamagePopup.spawn(self, "+%d" % amount, color)
+
+
+func update_chain(delta: float) -> void:
+	if chain == 0:
+		return
+	chain_left -= delta
+	if chain_left <= 0.0:
+		chain = 0
+
+
+func lifesteal_multiplier() -> float:
+	var mult := 1.0
+	for i in mini(lifesteal_tiers.size(), lifesteal_multipliers.size()):
+		if chain >= lifesteal_tiers[i]:
+			mult = lifesteal_multipliers[i]
+	return mult
+
+
+func register_hits(count: int, kills: int, heavy: bool) -> void:
+	chain += count
+	chain_left = chain_time
+	var gain := (count * lifesteal_per_hit + kills * lifesteal_per_kill) * lifesteal_multiplier()
+	heal_bank = minf(heal_bank + gain, lifesteal_cap)
+	hit_landed.emit(count, heavy)
+
+
+func update_lifesteal(delta: float) -> void:
+	heal_budget = minf(heal_budget + lifesteal_cap * delta, lifesteal_cap)
+	heal_flush_left -= delta
+	if heal_flush_left > 0.0 or heal_bank < 1.0 or health <= 0:
+		return
+	heal_flush_left = lifesteal_flush
+	if health >= max_health:
+		heal_bank = 0.0
+		return
+	var amount := mini(int(heal_bank), int(heal_budget))
+	if amount <= 0:
+		return
+	heal_bank -= amount
+	heal_budget -= amount
+	heal(amount, lifesteal_color)
 
 
 func add_herb() -> bool:
@@ -365,6 +736,7 @@ func start_attack() -> void:
 	Juice.squash(sprite, heavy_squash if heavy else light_squash, 0.3)
 	attack_pivot.rotation = attack_dir.angle()
 	velocity += attack_dir * (heavy_lunge if heavy else light_lunge)
+	play_sound(sfx_swing, 0.85 if heavy else 1.0)
 	start_swing(attack_dir.angle(), heavy_arc if heavy else light_arc, backhand == sprite.flip_h, active_timer, swing_scale if heavy else 1.0)
 
 
@@ -385,8 +757,6 @@ func update_charge(delta: float) -> void:
 	face(aim())
 	if not Input.is_action_pressed("attack"):
 		end_charge()
-		combo_timer = 1.0
-		start_attack()
 	elif charge_time >= spin_hold_time:
 		end_charge()
 		start_spin()
@@ -398,9 +768,11 @@ func end_charge() -> void:
 
 
 func start_spin() -> void:
+	holding = false
 	combo_step = 0
 	combo_timer = 0.0
 	caught_combo = false
+	play_sound(sfx_swing, 0.75)
 	begin_spin(spin_damage, spin_knockback, spin_radius, spin_time, spin_cooldown, true)
 
 
@@ -427,13 +799,27 @@ func begin_spin(damage: int, knockback: float, radius: float, duration: float, c
 func throw_scythe() -> void:
 	if not has_scythe:
 		return
-	var toss := combo_step == 2 and (combo_timer > 0.0 or charging) and not caught_combo
+	var buzz := spinning and current_heavy
+	var ricochet := not buzz and (dash_timer > 0.0 or rend_timer > 0.0)
+	var toss := not buzz and not ricochet and combo_step == 2 and (combo_timer > 0.0 or charging) and not caught_combo
 	if charging:
 		end_charge()
+	if buzz:
+		spinning = false
+		active_timer = 0.0
 	var dir := aim()
 	face(dir)
-	Juice.squash(sprite, heavy_squash if toss else light_squash, 0.3)
-	if toss:
+	Juice.squash(sprite, heavy_squash if toss or buzz else light_squash, 0.3)
+	play_sound(sfx_throw, 0.7 if buzz else (0.85 if toss else (1.15 if ricochet else 1.0)))
+	if ricochet:
+		rend_timer = 0.0
+		Juice.ring(self, attack_pivot.global_position + dir * 10.0, 14.0, ricochet_tint, 0.2, 2.5)
+		punch(dir, kick_light, 0.0)
+	if buzz:
+		Juice.ring(self, attack_pivot.global_position, 26.0, buzz_tint, 0.25, 3.0)
+		add_shake(heavy_shake * 0.6)
+		punch(dir, kick_heavy, 0.0)
+	elif toss:
 		Juice.ring(self, attack_pivot.global_position + dir * 10.0, 16.0, toss_tint, 0.2, 2.5)
 		add_shake(heavy_shake * 0.5)
 		punch(dir, kick_light, 0.0)
@@ -446,7 +832,28 @@ func throw_scythe() -> void:
 	scythe.thrower = self
 	scythe.direction = dir
 	scythe.return_speed = throw_return_speed
-	if toss:
+	if buzz:
+		scythe.piercing = true
+		scythe.speed = buzz_speed
+		scythe.max_range = buzz_range
+		scythe.damage = buzz_damage
+		scythe.knockback = buzz_knockback
+		scythe.hover = buzz_hover
+		scythe.rehit = buzz_rehit
+		scythe.spin_speed = buzz_spin
+		scythe.tint = buzz_tint
+		scythe.scale = Vector2.ONE * buzz_size
+	elif ricochet:
+		scythe.speed = ricochet_speed
+		scythe.max_range = throw_range
+		scythe.damage = ricochet_damage
+		scythe.knockback = ricochet_knockback
+		scythe.bounces = ricochet_bounces
+		scythe.bounce_range = ricochet_range
+		scythe.bounce_step = ricochet_damage_step
+		scythe.heavy_hits = true
+		scythe.tint = ricochet_tint
+	elif toss:
 		scythe.piercing = true
 		scythe.speed = toss_speed
 		scythe.max_range = toss_range
@@ -466,8 +873,12 @@ func throw_scythe() -> void:
 
 func catch_scythe(from_ground: bool) -> void:
 	has_scythe = true
+	play_sound(sfx_pickup)
 	if from_ground:
-		begin_spin(scoop_damage, scoop_knockback, scoop_radius, scoop_time, scoop_time, false)
+		if dash_timer > 0.0 or pounce_timer > 0.0:
+			pounce()
+		else:
+			begin_spin(scoop_damage, scoop_knockback, scoop_radius, scoop_time, scoop_time, false)
 		return
 	combo_step = 2
 	combo_timer = catch_window
@@ -492,7 +903,7 @@ func check_hits() -> void:
 	query.collision_mask = ENEMY_MASK
 	query.collide_with_areas = true
 	var landed := 0
-	var killed := false
+	var kills := 0
 	for hit in get_world_2d().direct_space_state.intersect_shape(query, 16):
 		var body: Object = hit["collider"]
 		if body in already_hit or not body.has_method("take_hit"):
@@ -507,13 +918,16 @@ func check_hits() -> void:
 			body.take_hit(current_damage, push * current_knockback)
 			if body is CharacterBody2D:
 				impact(body, push, hit_color(), current_heavy)
-				killed = killed or body.is_queued_for_deletion()
+				if body.is_queued_for_deletion():
+					kills += 1
 		landed += 1
+	var killed := kills > 0
 	if landed > 0:
+		play_sound(sfx_hit, 0.85 if current_heavy or killed else 1.0)
 		add_shake(kill_shake if killed else (heavy_shake if current_heavy else light_shake))
 		hitstop(maxf(kill_hitstop if killed else 0.0, heavy_hitstop if current_heavy else light_hitstop))
 		punch(attack_dir, kick_heavy if current_heavy or killed else kick_light, zoom_punch if current_heavy or killed else 0.0)
-		hit_landed.emit(landed, current_heavy)
+		register_hits(landed, kills, current_heavy)
 
 
 func hit_color() -> Color:
@@ -528,14 +942,17 @@ func impact(body: Node2D, push: Vector2, color: Color, heavy: bool) -> void:
 	Juice.squash(body.get_node_or_null("Sprite2D"), Vector2(0.65, 1.35) if heavy else Vector2(0.8, 1.2), 0.3)
 	if heavy or body.is_queued_for_deletion():
 		Juice.ring(self, at, 22.0 if heavy else 16.0, color, 0.22, 2.5)
+	if body.is_queued_for_deletion() and health < max_health:
+		Juice.sparks(self, at, (global_position + Vector2(0, -10) - at).normalized(), lifesteal_color, 6, 180.0)
 
 
-func on_scythe_hit(body: Node2D, push: Vector2, heavy: bool) -> void:
-	var color := toss_tint if heavy else light_spark
+func on_scythe_hit(body: Node2D, push: Vector2, heavy: bool, tint := Color.WHITE) -> void:
+	var color := tint if heavy else light_spark
 	impact(body, push.normalized(), color, heavy)
 	var killed := body.is_queued_for_deletion()
+	play_sound(sfx_hit, 0.85 if heavy or killed else 1.0)
 	add_shake(kill_shake if killed else 1.5)
 	if killed:
 		hitstop(kill_hitstop)
 	punch(push.normalized(), kick_heavy if killed else kick_light, zoom_punch if killed else 0.0)
-	hit_landed.emit(1, heavy)
+	register_hits(1, 1 if killed else 0, heavy)

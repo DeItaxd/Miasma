@@ -7,9 +7,15 @@ const DamagePopup := preload("res://scripts/damage_popup.gd")
 
 @export_group("Zone")
 @export var max_radius := 288.0
-@export var miasma_damage := 1
+@export var miasma_damage := 6
 @export var miasma_tick := 1.0
 @export var radius_ease := 6.0
+
+@export_group("Last Stand")
+@export var last_stand_ramp := 0.4
+@export var last_stand_max_damage := 60
+@export var last_stand_thicken := 0.006
+@export var last_stand_max_alpha := 0.75
 
 @export_group("Haze Edge")
 @export var jag_amount := 16.0
@@ -29,6 +35,8 @@ var is_out := false
 var zone_material: ShaderMaterial
 var tick_timer := 0.0
 var haze_time := 0.0
+var out_time := 0.0
+var base_tint: Color
 var player: Node2D
 
 @onready var overlay: ColorRect = $MiasmaOverlay
@@ -52,6 +60,8 @@ func _ready() -> void:
 	fog.noise = noise
 	zone_material.set_shader_parameter("fog_noise", fog)
 	overlay.material = zone_material
+	var tint_default: Variant = RenderingServer.shader_get_parameter_default(ZoneShader.get_rid(), "tint")
+	base_tint = tint_default if tint_default is Color else Color(0.55, 0.48, 0.16, 0.42)
 	player = get_tree().get_first_node_in_group("player")
 	update_radius()
 	radius = target_radius
@@ -64,6 +74,10 @@ func _physics_process(delta: float) -> void:
 	if not is_out:
 		fuel = maxf(fuel - burn_rate * delta, 0.0)
 		update_radius()
+	else:
+		out_time += delta
+		var thick := Color(base_tint.r, base_tint.g, base_tint.b, minf(base_tint.a + out_time * last_stand_thicken, last_stand_max_alpha))
+		zone_material.set_shader_parameter("tint", thick)
 	radius = lerpf(radius, target_radius, 1.0 - exp(-radius_ease * delta))
 	zone_material.set_shader_parameter("radius", radius)
 	if not is_instance_valid(player):
@@ -77,7 +91,13 @@ func _physics_process(delta: float) -> void:
 	tick_timer += delta
 	if tick_timer >= miasma_tick:
 		tick_timer -= miasma_tick
-		player.take_damage(miasma_damage)
+		player.take_damage(haze_damage(), true)
+
+
+func haze_damage() -> int:
+	if not is_out:
+		return miasma_damage
+	return mini(miasma_damage + roundi(out_time * last_stand_ramp), last_stand_max_damage)
 
 
 func is_inside(point: Vector2) -> bool:

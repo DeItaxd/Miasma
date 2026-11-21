@@ -20,8 +20,17 @@ var piercing := false
 var pull := 0.0
 var pull_stop := 24.0
 var tint := Color.WHITE
+var hover := 0.0
+var rehit := 0.0
+var bounces := 0
+var bounce_range := 0.0
+var bounce_step := 0
+var heavy_hits := false
+var bounced := false
+var bounce_target = null
 
 var state := State.OUT
+var rehit_timer := 0.0
 var traveled := 0.0
 var hit_bodies: Array[Object] = []
 var outline: ShaderMaterial
@@ -43,17 +52,23 @@ func is_grounded() -> bool:
 func _physics_process(delta: float) -> void:
 	if state != State.GROUND:
 		Juice.ghost(sprite, Color(tint.r, tint.g, tint.b, 0.35), 0.1, 59)
+		update_rehit(delta)
 	match state:
 		State.OUT:
-			var step := direction * speed * delta
-			position += step
-			traveled += step.length()
 			sprite.rotation += spin_speed * delta
-			if traveled >= max_range:
-				if piercing:
-					turn_back()
-				else:
-					drop()
+			if is_instance_valid(bounce_target) and not bounce_target.is_queued_for_deletion():
+				var target: Node2D = bounce_target
+				direction = (target.global_position + Vector2(0, -8) - global_position).normalized()
+			if traveled < max_range:
+				var step := direction * speed * delta
+				position += step
+				traveled += step.length()
+			elif hover > 0.0:
+				hover -= delta
+			elif piercing or bounced:
+				turn_back()
+			else:
+				drop()
 		State.RETURN:
 			if not is_instance_valid(thrower):
 				drop()
@@ -79,20 +94,46 @@ func _on_body_entered(body: Node2D) -> void:
 		var push := push_for(body)
 		body.take_hit(damage, push)
 		if is_instance_valid(thrower):
-			thrower.on_scythe_hit(body, push, piercing)
+			thrower.on_scythe_hit(body, push, piercing or heavy_hits, tint)
+		if state == State.OUT and bounces > 0 and bounce_from(body):
+			return
 		if state == State.OUT and not piercing:
 			state = State.RETURN
 	elif state == State.OUT:
-		if piercing:
+		if piercing or bounced:
 			turn_back()
 		else:
 			drop()
 
 
+func bounce_from(from: Node2D) -> bool:
+	var best: Node2D = null
+	var best_dist := bounce_range
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy == from or enemy in hit_bodies or enemy.is_queued_for_deletion():
+			continue
+		var dist := global_position.distance_to(enemy.global_position)
+		if dist < best_dist:
+			best = enemy
+			best_dist = dist
+	if best == null:
+		bounce_target = null
+		return false
+	bounces -= 1
+	bounced = true
+	bounce_target = best
+	traveled = 0.0
+	max_range = bounce_range * 1.5
+	damage += bounce_step
+	speed *= 1.08
+	Juice.ring(self, global_position, 12.0, tint, 0.18, 2.0)
+	return true
+
+
 func push_for(body: Node2D) -> Vector2:
 	if state == State.OUT:
 		return direction * knockback
-	if piercing and is_instance_valid(thrower):
+	if piercing and pull > 0.0 and is_instance_valid(thrower):
 		var to_thrower := thrower.global_position - body.global_position
 		var friction: Variant = body.get("knockback_friction")
 		if friction == null:
@@ -100,6 +141,19 @@ func push_for(body: Node2D) -> Vector2:
 		var needed := sqrt(2.0 * float(friction) * maxf(to_thrower.length() - pull_stop, 0.0))
 		return to_thrower.normalized() * minf(needed, pull)
 	return (body.global_position - global_position).normalized() * knockback
+
+
+func update_rehit(delta: float) -> void:
+	if rehit <= 0.0:
+		return
+	rehit_timer += delta
+	if rehit_timer < rehit:
+		return
+	rehit_timer = 0.0
+	hit_bodies.clear()
+	for body in get_overlapping_bodies():
+		if body.has_method("take_hit"):
+			_on_body_entered(body)
 
 
 func turn_back() -> void:

@@ -1,7 +1,6 @@
 extends CanvasLayer
 
 const RESTART_DELAY_MS := 600
-const COMBO_TIME := 1.6
 
 static var title_seen := false
 
@@ -19,7 +18,6 @@ var player
 var herb_arrow: Polygon2D
 var scythe_arrow: Polygon2D
 var combo := 0
-var combo_left := 0.0
 var combo_box: Control
 var combo_count: Label
 var combo_word: Label
@@ -130,7 +128,7 @@ func _process(_delta: float) -> void:
 	update_fire_alerts()
 	update_herb_arrow()
 	update_scythe_arrow()
-	update_combo(_delta)
+	update_combo()
 	if title.visible:
 		start_label.modulate.a = 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.005)
 
@@ -151,27 +149,36 @@ func build_title() -> void:
 	box.add_child(title_label("Keep the fire burning. Its smoke is the only safe air.\nEverything you need lies out of its reach.", 26, Color("c9c2b0")))
 	var columns := HBoxContainer.new()
 	columns.alignment = BoxContainer.ALIGNMENT_CENTER
-	columns.add_theme_constant_override("separation", 70)
+	columns.add_theme_constant_override("separation", 44)
 	box.add_child(columns)
 	columns.add_child(title_column("HOW TO PLAY", [
 		"Stay in the fire's smoke. The haze outside hurts you.",
 		"The fire burns out. Grab herbs and bring them back to feed it.",
 		"Rats go for the fire and eat its herbs. Kill them first.",
 		"If the fire goes out, it stays out. Survive as long as you can.",
+		"Hitting enemies heals you. Longer combos heal more. Getting hit resets your combo.",
 	]))
 	columns.add_child(title_column("CONTROLS", [
 		"WASD or arrows: move",
 		"Left click: attack",
 		"Right click: throw the scythe",
+		"Space or Shift: dash through enemies",
 		"Esc: pause",
 	]))
-	columns.add_child(title_column("COMBOS", [
+	columns.add_child(title_column("SCYTHE COMBOS", [
 		"3xM1: heavy finisher",
-		"2xM1 + M1 hold: spin attack",
+		"Hold M1 after any swing: spin attack",
 		"2xM1 + M2: Reaper's Toss. Cuts through everything, comes back and drags enemies in.",
 		"A throw that hits comes back. Catch it and your next click is a finisher.",
-		"A throw that misses stays on the ground. Go pick it up.",
+		"M2 during a spin: Buzzsaw. Hovers and shreds, then comes back.",
 		"Hit a cough with a heavy or a spin to knock it back.",
+	]))
+	columns.add_child(title_column("DASH COMBOS", [
+		"Dash through an enemy and your dash comes back right away. Chain up to 4 dashes.",
+		"After dashing through enemies, M1: Rend. Cuts everyone you passed. Longer chains cut harder.",
+		"Dash, then M2: Ricochet. The scythe bounces between enemies and hits harder each time.",
+		"A throw that misses stays on the ground. Run toward it to sprint after it.",
+		"Dash into your scythe on the ground: Pounce. A big spin, and your dash comes back.",
 	]))
 	start_label = title_label("Click to start", 36, Color("ffc861"))
 	box.add_child(start_label)
@@ -188,15 +195,15 @@ func title_label(text: String, font_size: int, color: Color) -> Label:
 
 func title_column(header: String, lines: Array) -> VBoxContainer:
 	var column := VBoxContainer.new()
-	column.custom_minimum_size = Vector2(440, 0)
-	column.add_theme_constant_override("separation", 12)
+	column.custom_minimum_size = Vector2(400, 0)
+	column.add_theme_constant_override("separation", 9)
 	column.add_child(title_label(header, 30, Color("ffc861")))
 	for line in lines:
 		var label := Label.new()
 		label.text = line
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		label.custom_minimum_size = Vector2(440, 0)
-		style_label(label, 22, Color("ece6d6"))
+		label.custom_minimum_size = Vector2(400, 0)
+		style_label(label, 20, Color("ece6d6"))
 		column.add_child(label)
 	return column
 
@@ -245,14 +252,13 @@ func build_combo() -> void:
 	combo_box.add_child(combo_word)
 
 
-func update_combo(delta: float) -> void:
+func update_combo() -> void:
 	if combo == 0 or get_tree().paused:
 		return
-	combo_left -= delta
-	if combo_left <= 0.0:
+	if not is_instance_valid(player) or player.chain == 0:
 		end_combo()
-	elif combo_left < 0.4:
-		combo_box.modulate.a = combo_left / 0.4
+	elif player.chain_left < 0.4:
+		combo_box.modulate.a = player.chain_left / 0.4
 
 
 func end_combo() -> void:
@@ -271,17 +277,19 @@ func combo_color(count: int) -> Color:
 
 
 func _on_hit_landed(count: int, heavy: bool) -> void:
-	combo += count
+	combo = player.chain if is_instance_valid(player) else combo + count
 	best_combo = maxi(best_combo, combo)
-	combo_left = COMBO_TIME
 	if heavy:
 		impact_flash.color.a = 0.12
 		create_tween().tween_property(impact_flash, "color:a", 0.0, 0.15)
 	if combo < 2:
+		combo_box.visible = false
 		return
 	combo_box.visible = true
 	combo_box.modulate.a = 1.0
 	combo_count.text = str(combo)
+	var mult: float = player.lifesteal_multiplier() if is_instance_valid(player) else 1.0
+	combo_word.text = "HITS" if mult <= 1.0 else "HITS   heal x%s" % ("%.2f" % mult).rstrip("0").rstrip(".")
 	var color := combo_color(combo)
 	combo_count.add_theme_color_override("font_color", color)
 	combo_word.add_theme_color_override("font_color", color)
@@ -435,7 +443,6 @@ func format_time(seconds: float) -> String:
 
 func _on_health_changed(current: int, maximum: int) -> void:
 	if last_health >= 0 and current < last_health:
-		end_combo()
 		hurt_flash.color.a = 0.28
 		create_tween().tween_property(hurt_flash, "color:a", 0.0, 0.3)
 	last_health = current

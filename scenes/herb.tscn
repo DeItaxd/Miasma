@@ -1,7 +1,15 @@
 [gd_scene format=3 uid="uid://cr2uy6sglitr7"]
 
 [ext_resource type="Script" uid="uid://c8jfu5o5xxykj" path="res://scripts/herb.gd" id="1_jpbwa"]
-[ext_resource type="Texture2D" uid="uid://t2rgucua0ao8" path="res://assets/sprites/herb.png" id="2_ldurg"]
+[ext_resource type="Texture2D" uid="uid://ml0uy4lt2a4j" path="res://assets/sprites/mint.png" id="2_mint"]
+[ext_resource type="Shader" path="res://shaders/outline.gdshader" id="3_outline"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_herb"]
+shader = ExtResource("3_outline")
+shader_parameter/outline_color = Color(0.88, 1, 0.72, 0.85)
+shader_parameter/width = 12.0
+shader_parameter/pulse = 0.6
+shader_parameter/pulse_speed = 3.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_ldurg"]
 
@@ -11,8 +19,12 @@ collision_layer = 0
 collision_mask = 2
 script = ExtResource("1_jpbwa")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1345209186]
-texture = ExtResource("2_ldurg")
+[node name="Sprite2D" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_herb")
+position = Vector2(0, -10.1)
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("2_mint")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1758393352]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
 shape = SubResource("CircleShape2D_ldurg")

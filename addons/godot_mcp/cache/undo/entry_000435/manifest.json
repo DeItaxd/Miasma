@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://scenes/herb.tscn)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000435/files/scenes/herb.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/herb.tscn"
+    }
+  ],
+  "id": "000435",
+  "timestamp": 1795230718.0,
+  "tool": "write_file"
+}

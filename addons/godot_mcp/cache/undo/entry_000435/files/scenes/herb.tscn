@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://cr2uy6sglitr7"]
+
+[ext_resource type="Script" uid="uid://c8jfu5o5xxykj" path="res://scripts/herb.gd" id="1_jpbwa"]
+[ext_resource type="Texture2D" uid="uid://ml0uy4lt2a4j" path="res://assets/sprites/mint.png" id="2_mint"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ldurg"]
+
+[node name="Herb" type="Area2D" unique_id=815310236]
+z_index = 60
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_jpbwa")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.1, 0.1)
+texture = ExtResource("2_mint")
+offset = Vector2(0, -101)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_ldurg")
