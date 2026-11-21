@@ -1,0 +1,17 @@
+{
+  "args_summary": "rename_file(old_path=res://assets/sprites/FellLining-Regular.ttf, new_path=res://assets/fonts/FellLining-Regular.ttf)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000631/files/assets/sprites/FellLining-Regular.ttf",
+      "kind": "deleted",
+      "path": "res://assets/sprites/FellLining-Regular.ttf"
+    },
+    {
+      "kind": "created",
+      "path": "res://assets/fonts/FellLining-Regular.ttf"
+    }
+  ],
+  "id": "000631",
+  "timestamp": 1795254941.0,
+  "tool": "rename_file"
+}

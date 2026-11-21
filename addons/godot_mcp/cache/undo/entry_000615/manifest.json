@@ -1,0 +1,17 @@
+{
+  "args_summary": "rename_file(old_path=res://assets/sprites/OFL-PirataOne.txt, new_path=res://assets/fonts/OFL-PirataOne.txt)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000615/files/assets/sprites/OFL-PirataOne.txt",
+      "kind": "deleted",
+      "path": "res://assets/sprites/OFL-PirataOne.txt"
+    },
+    {
+      "kind": "created",
+      "path": "res://assets/fonts/OFL-PirataOne.txt"
+    }
+  ],
+  "id": "000615",
+  "timestamp": 1795254710.0,
+  "tool": "rename_file"
+}

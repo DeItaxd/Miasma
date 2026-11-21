@@ -14,8 +14,11 @@ const CoughScene := preload("res://scenes/cough_cloud.tscn")
 @export var shoot_cooldown := 2.5
 @export var zone_margin := 16.0
 @export var sprite_faces_left := false
+@export var walk_fps := 4.0
 
 var health := 0
+var anim_time := 0.0
+var base_scale := Vector2.ONE
 var knockback := Vector2.ZERO
 var windup := 0.0
 var cooldown_timer := 0.0
@@ -30,6 +33,9 @@ func _ready() -> void:
 	target = get_tree().get_first_node_in_group("player")
 	brazier = get_tree().get_first_node_in_group("brazier")
 	cooldown_timer = randf_range(0.5, shoot_cooldown)
+	base_scale = sprite.scale
+	anim_time = randf() * 10.0
+	sprite.set_instance_shader_parameter("seed", randf() * 100.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -52,8 +58,16 @@ func _physics_process(delta: float) -> void:
 				windup = delta
 		face(move.normalized().x if move != Vector2.ZERO else dir.x)
 	update_visual()
+	animate(delta, move != Vector2.ZERO)
 	velocity = move + knockback
 	move_and_slide()
+
+
+func animate(delta: float, moving: bool) -> void:
+	if sprite.hframes < 2 or not moving:
+		return
+	anim_time += delta
+	sprite.frame = int(anim_time * walk_fps) % sprite.hframes
 
 
 func pick_move(dir: Vector2, dist: float, delta: float) -> Vector2:
@@ -77,7 +91,7 @@ func in_zone(point: Vector2, margin: float) -> bool:
 
 func shoot(dir: Vector2) -> void:
 	sprite.modulate = Color.WHITE
-	sprite.scale = Vector2.ONE
+	sprite.scale = base_scale
 	var cloud := CoughScene.instantiate()
 	cloud.direction = dir
 	get_tree().current_scene.add_child(cloud)
@@ -92,7 +106,7 @@ func face(x: float) -> void:
 func update_visual() -> void:
 	var swell := windup / windup_time if windup > 0.0 else 0.0
 	if swell > 0.0:
-		sprite.scale = Vector2.ONE * (1.0 + 0.3 * swell)
+		sprite.scale = base_scale * (1.0 + 0.3 * swell)
 		sprite.modulate = Color.WHITE.lerp(Color(1.6, 1.6, 0.6), swell)
 
 
@@ -102,7 +116,7 @@ func take_hit(damage: int, push: Vector2) -> void:
 	health -= damage
 	knockback = push
 	windup = 0.0
-	sprite.scale = Vector2.ONE
+	sprite.scale = base_scale
 	DamagePopup.spawn(self, damage, Color("ffe08a"))
 	sprite.modulate = Color(10, 10, 10)
 	create_tween().tween_property(sprite, "modulate", Color.WHITE, 0.12)

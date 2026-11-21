@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://assets/sprites/chory_walk.png.import)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000587/files/assets/sprites/chory_walk.png.import",
+      "kind": "snapshot",
+      "path": "res://assets/sprites/chory_walk.png.import"
+    }
+  ],
+  "id": "000587",
+  "timestamp": 1795252909.0,
+  "tool": "write_file"
+}

@@ -1,0 +1,17 @@
+{
+  "args_summary": "rename_file(old_path=res://assets/sprites/OFL-IMFellEnglish.txt, new_path=res://assets/fonts/OFL-IMFellEnglish.txt)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000616/files/assets/sprites/OFL-IMFellEnglish.txt",
+      "kind": "deleted",
+      "path": "res://assets/sprites/OFL-IMFellEnglish.txt"
+    },
+    {
+      "kind": "created",
+      "path": "res://assets/fonts/OFL-IMFellEnglish.txt"
+    }
+  ],
+  "id": "000616",
+  "timestamp": 1795254711.0,
+  "tool": "rename_file"
+}

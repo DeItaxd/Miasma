@@ -77,7 +77,6 @@ func end_game(reason: String) -> void:
 	if new_best:
 		best = elapsed
 		save_best(best)
-	get_tree().paused = true
 	game_over.emit(reason, elapsed, best, new_best)
 
 

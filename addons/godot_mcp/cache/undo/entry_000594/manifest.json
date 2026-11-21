@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://scenes/rat.tscn)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000594/files/scenes/rat.tscn",
+      "kind": "snapshot",
+      "path": "res://scenes/rat.tscn"
+    }
+  ],
+  "id": "000594",
+  "timestamp": 1795253446.0,
+  "tool": "write_file"
+}

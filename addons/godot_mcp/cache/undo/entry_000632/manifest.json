@@ -1,0 +1,17 @@
+{
+  "args_summary": "rename_file(old_path=res://assets/sprites/OFL-CrimsonText.txt, new_path=res://assets/fonts/OFL-CrimsonText.txt)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000632/files/assets/sprites/OFL-CrimsonText.txt",
+      "kind": "deleted",
+      "path": "res://assets/sprites/OFL-CrimsonText.txt"
+    },
+    {
+      "kind": "created",
+      "path": "res://assets/fonts/OFL-CrimsonText.txt"
+    }
+  ],
+  "id": "000632",
+  "timestamp": 1795254942.0,
+  "tool": "rename_file"
+}

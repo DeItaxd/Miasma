@@ -1,0 +1,17 @@
+{
+  "args_summary": "rename_file(old_path=res://assets/sprites/PirataOne-Regular.ttf, new_path=res://assets/fonts/PirataOne-Regular.ttf)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000613/files/assets/sprites/PirataOne-Regular.ttf",
+      "kind": "deleted",
+      "path": "res://assets/sprites/PirataOne-Regular.ttf"
+    },
+    {
+      "kind": "created",
+      "path": "res://assets/fonts/PirataOne-Regular.ttf"
+    }
+  ],
+  "id": "000613",
+  "timestamp": 1795254709.0,
+  "tool": "rename_file"
+}

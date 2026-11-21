@@ -2,12 +2,14 @@ extends RefCounted
 
 const WIDTH := 40.0
 const SCALE := 0.5
+const NumberFont := preload("res://assets/fonts/PirataOne-Regular.ttf")
 
 
 static func spawn(source: Node2D, value: Variant, color: Color) -> void:
 	var popup := Label.new()
 	popup.text = str(value)
 	popup.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	popup.add_theme_font_override("font", NumberFont)
 	popup.add_theme_font_size_override("font_size", 16)
 	popup.add_theme_color_override("font_color", color)
 	popup.add_theme_color_override("font_outline_color", Color.BLACK)

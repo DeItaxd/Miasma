@@ -30,6 +30,7 @@ func _ready() -> void:
 	brazier = get_tree().get_first_node_in_group("brazier")
 	bar_width = bar_fill.size.x
 	update_windup_visual()
+	sprite.set_instance_shader_parameter("seed", randf() * 100.0)
 
 
 func _physics_process(delta: float) -> void:

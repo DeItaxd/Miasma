@@ -1,0 +1,13 @@
+{
+  "args_summary": "edit_script",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000619/files/scripts/damage_popup.gd",
+      "kind": "snapshot",
+      "path": "res://scripts/damage_popup.gd"
+    }
+  ],
+  "id": "000619",
+  "timestamp": 1795254729.0,
+  "tool": "edit_script"
+}

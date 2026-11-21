@@ -1,8 +1,40 @@
 extends CanvasLayer
 
 const RESTART_DELAY_MS := 600
+const VignetteShader := preload("res://shaders/death_vignette.gdshader")
+const TitleFont := preload("res://assets/fonts/PirataOne-Regular.ttf")
 
 static var title_seen := false
+
+@export_group("Death Screen")
+@export var vignette_delay := 0.3
+@export var vignette_frame := 0.55
+@export var vignette_frame_time := 1.0
+@export var vignette_linger := 0.6
+@export var vignette_close_time := 0.7
+@export var results_fade_time := 0.5
+@export var results_stagger := 0.15
+
+@export_group("Ambient Vignette")
+@export var ambient_strength := 0.5
+@export var ambient_radius := 0.85
+@export var ambient_softness := 0.55
+@export var ambient_color := Color(0.03, 0.025, 0.015)
+
+@export_group("Intro")
+@export var intro_text_fade := 0.7
+@export var intro_reveal_time := 0.8
+@export var intro_linger := 0.4
+@export var intro_open_time := 1.0
+@export var restart_reveal_time := 0.4
+@export var restart_open_time := 0.6
+
+var dying := false
+var vignette: ColorRect
+var vignette_material: ShaderMaterial
+var vignette_tween: Tween
+var results_box: VBoxContainer
+var results_prompt: Label
 
 var bar_width := 0.0
 var main
@@ -37,9 +69,11 @@ var start_label: Label
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	style_label(hp_label, 15, Color.WHITE)
-	style_label(herb_label, 15, Color("7cff4f"))
+	style_label(hp_label, 26, Color.WHITE)
+	style_label(herb_label, 30, Color("7cff4f"))
 	style_label(time_label, 28, Color.WHITE)
+	time_label.add_theme_font_override("font", TitleFont)
+	time_label.add_theme_font_size_override("font_size", 34)
 	style_label(game_over_label, 32, Color.WHITE)
 	game_over.visible = false
 	hurt_flash = ColorRect.new()
@@ -103,9 +137,15 @@ func _ready() -> void:
 	build_combo()
 	build_pause_menu()
 	build_title()
+	build_vignette()
+	build_ambient_vignette()
 	if not title_seen:
 		title.visible = true
 		get_tree().paused = true
+		set_vignette(-0.6)
+		vignette.visible = true
+	else:
+		open_vignette(restart_reveal_time, 0.0, restart_open_time)
 	brazier = get_tree().get_first_node_in_group("brazier")
 	if brazier:
 		brazier.went_out.connect(_on_fire_out)
@@ -129,13 +169,16 @@ func _process(_delta: float) -> void:
 	update_herb_arrow()
 	update_scythe_arrow()
 	update_combo()
+	update_vignette()
 	if title.visible:
 		start_label.modulate.a = 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.005)
+	if results_prompt and game_over.visible:
+		results_prompt.self_modulate.a = 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.005)
 
 
 func build_title() -> void:
 	title = ColorRect.new()
-	title.color = Color(0.04, 0.035, 0.03, 0.88)
+	title.color = Color(0, 0, 0, 0)
 	title.set_anchors_preset(Control.PRESET_FULL_RECT)
 	title.visible = false
 	add_child(title)
@@ -210,11 +253,27 @@ func title_column(header: String, lines: Array) -> VBoxContainer:
 
 func start_game() -> void:
 	title_seen = true
-	title.visible = false
 	get_tree().paused = false
 	var music := get_node_or_null("/root/Music")
 	if music:
 		music.start()
+	var fade := create_tween()
+	fade.tween_property(title, "modulate:a", 0.0, intro_text_fade)
+	fade.tween_callback(title.hide)
+	open_vignette(intro_reveal_time, intro_linger, intro_open_time)
+
+
+func open_vignette(reveal_time: float, linger: float, open_time: float) -> void:
+	if vignette_tween and vignette_tween.is_valid():
+		vignette_tween.kill()
+	set_vignette(-0.6)
+	vignette.visible = true
+	update_vignette()
+	vignette_tween = create_tween().set_ignore_time_scale(true)
+	vignette_tween.tween_method(set_vignette, -0.6, vignette_frame * 0.85, reveal_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	vignette_tween.tween_method(set_vignette, vignette_frame * 0.85, vignette_frame, linger)
+	vignette_tween.tween_method(set_vignette, vignette_frame, 2.0, open_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	vignette_tween.tween_callback(vignette.hide)
 
 
 func build_combo() -> void:
@@ -372,7 +431,7 @@ func update_fire_alerts() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if title.visible:
+	if title.visible and not title_seen:
 		if event.is_action_pressed("quit"):
 			get_tree().quit()
 		elif (event is InputEventKey or event is InputEventMouseButton) and event.is_pressed() and not event.is_echo():
@@ -384,6 +443,8 @@ func _input(event: InputEvent) -> void:
 			get_tree().quit()
 		elif Time.get_ticks_msec() - over_since > RESTART_DELAY_MS and (event.is_action_pressed("restart") or event.is_action_pressed("attack")):
 			restart()
+		return
+	if dying:
 		return
 	if event.is_action_pressed("quit"):
 		set_paused(not pause_menu.visible)
@@ -442,6 +503,8 @@ func restart() -> void:
 
 
 func style_label(label: Label, font_size: int, color: Color) -> void:
+	if font_size >= 40:
+		label.add_theme_font_override("font", TitleFont)
 	label.add_theme_font_size_override("font_size", font_size)
 	label.add_theme_color_override("font_color", color)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -476,9 +539,109 @@ func _on_fire_out() -> void:
 
 
 func _on_game_over(reason: String, time: float, best: float, new_best: bool) -> void:
-	over_since = Time.get_ticks_msec()
+	dying = true
 	end_combo()
-	var best_text := "NEW BEST!" if new_best else "Best  %s" % format_time(best)
+	muffle_music(true)
+	build_results(reason, time, best, new_best)
+	if vignette_tween and vignette_tween.is_valid():
+		vignette_tween.kill()
+	set_vignette(2.0)
+	vignette.visible = true
+	update_vignette()
+	vignette_tween = create_tween().set_ignore_time_scale(true)
+	vignette_tween.tween_interval(vignette_delay)
+	vignette_tween.tween_method(set_vignette, 2.0, vignette_frame, vignette_frame_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	vignette_tween.tween_method(set_vignette, vignette_frame, vignette_frame * 0.85, vignette_linger)
+	vignette_tween.tween_method(set_vignette, vignette_frame * 0.85, -0.6, vignette_close_time).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	vignette_tween.tween_callback(show_results)
+
+
+func build_vignette() -> void:
+	vignette = ColorRect.new()
+	vignette.set_anchors_preset(Control.PRESET_FULL_RECT)
+	vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vignette_material = ShaderMaterial.new()
+	vignette_material.shader = VignetteShader
+	vignette.material = vignette_material
+	vignette.visible = false
+	add_child(vignette)
+	move_child(vignette, game_over.get_index())
+
+
+func build_ambient_vignette() -> void:
+	var shade := ColorRect.new()
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var look := ShaderMaterial.new()
+	look.shader = VignetteShader
+	look.set_shader_parameter("aspect", 1.0)
+	look.set_shader_parameter("radius", ambient_radius)
+	look.set_shader_parameter("softness", ambient_softness)
+	look.set_shader_parameter("raggedness", 0.03)
+	look.set_shader_parameter("tint", Color(ambient_color, ambient_strength))
+	shade.material = look
+	add_child(shade)
+	move_child(shade, 0)
+
+
+func set_vignette(value: float) -> void:
+	vignette_material.set_shader_parameter("radius", value)
+
+
+func update_vignette() -> void:
+	if not vignette.visible:
+		return
+	var size := get_viewport().get_visible_rect().size
+	vignette_material.set_shader_parameter("aspect", size.x / size.y)
+	if is_instance_valid(player):
+		var screen: Vector2 = player.get_global_transform_with_canvas() * Vector2(0.0, -8.0)
+		vignette_material.set_shader_parameter("center", screen / size)
+
+
+func build_results(reason: String, time: float, best: float, new_best: bool) -> void:
+	game_over_label.visible = false
 	var kills: int = main.kills if main and "kills" in main else 0
-	game_over_label.text = "%s\n\nSurvived  %s\n%s\n\nKills  %d        Best combo  %d\n\nR or click to restart    Esc to quit" % [reason, format_time(time), best_text, kills, best_combo]
+	results_box = VBoxContainer.new()
+	results_box.set_anchors_preset(Control.PRESET_CENTER)
+	results_box.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	results_box.grow_vertical = Control.GROW_DIRECTION_BOTH
+	results_box.add_theme_constant_override("separation", 14)
+	game_over.add_child(results_box)
+	results_box.add_child(title_label(reason, 72, Color("d94a3d")))
+	results_box.add_child(results_gap(18))
+	results_box.add_child(title_label("Survived  %s" % format_time(time), 40, Color("ece6d6")))
+	if new_best:
+		results_box.add_child(title_label("NEW BEST!", 30, Color("ffc861")))
+	else:
+		results_box.add_child(title_label("Best  %s" % format_time(best), 28, Color("8a8478")))
+	results_box.add_child(results_gap(6))
+	results_box.add_child(title_label("Kills  %d" % kills, 32, Color("ece6d6")))
+	results_box.add_child(title_label("Best combo  %d" % best_combo, 32, combo_color(best_combo)))
+	results_box.add_child(results_gap(24))
+	results_prompt = title_label("R or click to restart     Esc to quit", 24, Color("ffc861"))
+	results_box.add_child(results_prompt)
+	for line in results_box.get_children():
+		line.modulate.a = 0.0
+
+
+func results_gap(height: float) -> Control:
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(0.0, height)
+	return gap
+
+
+func show_results() -> void:
+	get_tree().paused = true
+	Engine.time_scale = 1.0
+	over_since = Time.get_ticks_msec()
+	game_over.modulate.a = 0.0
 	game_over.visible = true
+	var reveal := create_tween()
+	reveal.tween_property(game_over, "modulate:a", 1.0, results_fade_time)
+	var step := 0
+	for line in results_box.get_children():
+		if line is Label:
+			reveal.parallel().tween_property(line, "modulate:a", 1.0, 0.3).set_delay(results_fade_time * 0.5 + step * results_stagger)
+			step += 1
+		else:
+			line.modulate.a = 1.0

@@ -1,0 +1,13 @@
+{
+  "args_summary": "edit_script",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000628/files/scripts/hud.gd",
+      "kind": "snapshot",
+      "path": "res://scripts/hud.gd"
+    }
+  ],
+  "id": "000628",
+  "timestamp": 1795254774.0,
+  "tool": "edit_script"
+}

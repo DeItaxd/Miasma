@@ -2,9 +2,18 @@
 
 [ext_resource type="Script" uid="uid://cfugv5ro2y82k" path="res://scripts/rat.gd" id="1_x7xrk"]
 [ext_resource type="Texture2D" uid="uid://bimmq0521kc4b" path="res://assets/sprites/rat.png" id="2_7o8g1"]
+[ext_resource type="Shader" path="res://shaders/grime.gdshader" id="3_grime"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_7o8g1"]
 radius = 8.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_grime"]
+shader = ExtResource("3_grime")
+shader_parameter/scale = 0.3
+shader_parameter/desaturate = 0.2
+shader_parameter/grime = 0.35
+shader_parameter/mud_height = 0.5
+shader_parameter/stains = 0.3
 
 [node name="Rat" type="CharacterBody2D" unique_id=1947413426 groups=["enemies", "rats"]]
 collision_layer = 4
@@ -13,6 +22,7 @@ motion_mode = 1
 script = ExtResource("1_x7xrk")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2034935433]
+material = SubResource("ShaderMaterial_grime")
 scale = Vector2(0.2, 0.2)
 texture = ExtResource("2_7o8g1")
 offset = Vector2(0, -22)

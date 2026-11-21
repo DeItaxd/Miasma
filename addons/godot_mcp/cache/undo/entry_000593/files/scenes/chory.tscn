@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://0h2qsvburq8p"]
+
+[ext_resource type="Script" uid="uid://ctfoqbxqut454" path="res://scripts/chory.gd" id="1_cinea"]
+[ext_resource type="Texture2D" uid="uid://d15gacos8bgn1" path="res://assets/sprites/chory_walk.png" id="2_walk"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ba36h"]
+radius = 8.0
+
+[node name="Chory" type="CharacterBody2D" unique_id=1769122999 groups=["enemies"]]
+collision_layer = 4
+collision_mask = 7
+motion_mode = 1
+script = ExtResource("1_cinea")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1082255871]
+scale = Vector2(0.17, 0.17)
+texture = ExtResource("2_walk")
+offset = Vector2(0, -90)
+hframes = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1026730103]
+position = Vector2(0, -6)
+shape = SubResource("CircleShape2D_ba36h")

@@ -1,0 +1,12 @@
+{
+  "args_summary": "write_file(path=res://shaders/death_vignette.gdshader)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://shaders/death_vignette.gdshader"
+    }
+  ],
+  "id": "000598",
+  "timestamp": 1795254131.0,
+  "tool": "write_file"
+}

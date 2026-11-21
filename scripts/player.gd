@@ -7,6 +7,7 @@ signal hit_landed(count: int, heavy: bool)
 
 const ENEMY_MASK := 4
 const DamagePopup := preload("res://scripts/damage_popup.gd")
+const DeathPuff := preload("res://scripts/death_puff.gd")
 const Juice := preload("res://scripts/juice.gd")
 const ThrownScythe := preload("res://scenes/thrown_scythe.tscn")
 const SwingSound := preload("res://assets/sounds/sound effects/swing.mp3")
@@ -199,6 +200,15 @@ const PunchSound := preload("res://assets/sounds/sound effects/punch.mp3")
 @export var light_squash := Vector2(1.12, 0.9)
 @export var heavy_squash := Vector2(1.28, 0.8)
 
+@export_group("Death")
+@export var death_flash_time := 0.25
+@export var death_fall_time := 0.45
+@export var death_slowmo := 0.35
+@export var death_zoom := 1.25
+@export var death_zoom_time := 2.5
+@export var death_tint := Color(0.5, 0.5, 0.55)
+@export var death_dust := Color("6b5a45")
+
 var shake := 0.0
 var kick := Vector2.ZERO
 var zoom_extra := 0.0
@@ -265,6 +275,8 @@ var dash_chain := 0
 var dash_hits_before := 0
 var holding := false
 var pounce_timer := 0.0
+var flash_tween: Tween
+var body_pivot: Node2D
 var sfx_swing: AudioStreamPlayer
 var sfx_throw: AudioStreamPlayer
 var sfx_pickup: AudioStreamPlayer
@@ -339,7 +351,7 @@ func punch(dir: Vector2, strength: float, zoom: float) -> void:
 
 
 func hitstop(duration: float) -> void:
-	if duration <= 0.0:
+	if duration <= 0.0 or health <= 0:
 		return
 	hitstop_left = maxf(hitstop_left, duration)
 	Engine.time_scale = 0.05
@@ -505,6 +517,10 @@ func update_trail() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if health <= 0:
+		velocity = velocity.move_toward(Vector2.ZERO, friction * delta)
+		move_and_slide()
+		return
 	invulnerable_timer = maxf(invulnerable_timer - delta, 0.0)
 	time_since_hurt += delta
 	update_regen(delta)
@@ -637,10 +653,48 @@ func take_damage(amount: int, from_haze := false) -> void:
 	health_changed.emit(health, max_health)
 	DamagePopup.spawn(self, amount, Color("ff5a4f"))
 	add_shake(hurt_shake)
+	if flash_tween and flash_tween.is_valid():
+		flash_tween.kill()
 	sprite.modulate = Color(10, 10, 10)
-	create_tween().tween_property(sprite, "modulate", Color.WHITE, 0.15)
 	if health == 0:
+		fall_over()
 		died.emit()
+		return
+	flash_tween = create_tween()
+	flash_tween.tween_property(sprite, "modulate", Color.WHITE, 0.15)
+
+
+func fall_over() -> void:
+	charging = false
+	spinning = false
+	holding = false
+	active_timer = 0.0
+	dash_timer = 0.0
+	boosting = false
+	boost_trail.emitting = false
+	hitstop_left = 0.0
+	Engine.time_scale = death_slowmo
+	var feet := to_local(sprite.to_global(Vector2(0.0, sprite.get_rect().end.y)))
+	body_pivot = Node2D.new()
+	add_child(body_pivot)
+	body_pivot.position = Vector2(0.0, feet.y)
+	sprite.reparent(body_pivot)
+	scythe_arm.reparent(body_pivot)
+	var side := 1.0 if sprite.flip_h else -1.0
+	var fall := create_tween().set_ignore_time_scale(true)
+	fall.tween_interval(death_flash_time)
+	fall.tween_property(body_pivot, "rotation", side * PI * 0.5, death_fall_time).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	fall.parallel().tween_property(sprite, "modulate", death_tint, death_fall_time)
+	fall.tween_callback(land)
+	fall.tween_property(body_pivot, "rotation", side * PI * 0.43, 0.08).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	fall.tween_property(body_pivot, "rotation", side * PI * 0.5, 0.12).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	var push := create_tween().set_ignore_time_scale(true)
+	push.tween_property(self, "base_zoom", base_zoom * death_zoom, death_zoom_time).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+
+func land() -> void:
+	add_shake(hurt_shake)
+	DeathPuff.spawn(self, death_dust, 16)
 
 
 func update_regen(delta: float) -> void:
@@ -872,6 +926,8 @@ func throw_scythe() -> void:
 
 
 func catch_scythe(from_ground: bool) -> void:
+	if health <= 0:
+		return
 	has_scythe = true
 	play_sound(sfx_pickup)
 	if from_ground:

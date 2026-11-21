@@ -11,8 +11,10 @@ const DeathPuff := preload("res://scripts/death_puff.gd")
 @export var attack_range := 22.0
 @export var attack_cooldown := 1.0
 @export var sprite_faces_left := false
+@export var walk_fps := 4.0
 
 var health := 0
+var anim_time := 0.0
 var attack_timer := 0.0
 var knockback := Vector2.ZERO
 var target: Node2D
@@ -23,6 +25,8 @@ var target: Node2D
 func _ready() -> void:
 	health = max_health
 	target = get_tree().get_first_node_in_group("player")
+	anim_time = randf() * 10.0
+	sprite.set_instance_shader_parameter("seed", randf() * 100.0)
 
 
 func _physics_process(delta: float) -> void:
@@ -39,6 +43,14 @@ func _physics_process(delta: float) -> void:
 	knockback = knockback.move_toward(Vector2.ZERO, knockback_friction * delta)
 	velocity = chase + knockback
 	move_and_slide()
+	animate(delta, chase != Vector2.ZERO)
+
+
+func animate(delta: float, moving: bool) -> void:
+	if sprite.hframes < 2 or not moving:
+		return
+	anim_time += delta
+	sprite.frame = int(anim_time * walk_fps) % sprite.hframes
 
 
 func face(x: float) -> void:
