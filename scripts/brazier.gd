@@ -10,6 +10,10 @@ const DamagePopup := preload("res://scripts/damage_popup.gd")
 @export var miasma_damage := 1
 @export var miasma_tick := 1.0
 
+@export_group("Haze Edge")
+@export var jag_amount := 16.0
+@export var jag_speed := 1.0
+
 @export_group("Fuel")
 @export var max_fuel := 100.0
 @export var start_fuel := 100.0
@@ -22,6 +26,7 @@ var radius := 0.0
 var is_out := false
 var zone_material: ShaderMaterial
 var tick_timer := 0.0
+var haze_time := 0.0
 var player: Node2D
 
 @onready var overlay: ColorRect = $MiasmaOverlay
@@ -33,12 +38,25 @@ func _ready() -> void:
 	zone_material = ShaderMaterial.new()
 	zone_material.shader = ZoneShader
 	zone_material.set_shader_parameter("center", global_position)
+	zone_material.set_shader_parameter("jag", jag_amount)
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.frequency = 0.02
+	noise.fractal_octaves = 3
+	var fog := NoiseTexture2D.new()
+	fog.width = 256
+	fog.height = 256
+	fog.seamless = true
+	fog.noise = noise
+	zone_material.set_shader_parameter("fog_noise", fog)
 	overlay.material = zone_material
 	player = get_tree().get_first_node_in_group("player")
 	update_radius()
 
 
 func _physics_process(delta: float) -> void:
+	haze_time += delta * jag_speed
+	zone_material.set_shader_parameter("time", haze_time)
 	if not is_out:
 		fuel = maxf(fuel - burn_rate * delta, 0.0)
 		update_radius()
@@ -57,7 +75,18 @@ func _physics_process(delta: float) -> void:
 
 
 func is_inside(point: Vector2) -> bool:
-	return point.distance_to(global_position) <= radius
+	return point.distance_to(global_position) <= edge_radius(point)
+
+
+func edge_radius(point: Vector2) -> float:
+	var amount := minf(jag_amount, radius * 0.25)
+	var u := (point - global_position).angle() / TAU
+	var wave := 0.45 * tri(u * 11.0 + haze_time * 0.04) + 0.35 * tri(u * 31.0 - haze_time * 0.07) + 0.2 * tri(u * 67.0 + haze_time * 0.11)
+	return radius + amount * wave
+
+
+func tri(x: float) -> float:
+	return 1.0 - 4.0 * absf(fposmod(x, 1.0) - 0.5)
 
 
 func add_fuel(amount: float) -> void:
