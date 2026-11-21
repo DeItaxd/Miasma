@@ -3,6 +3,8 @@ extends Node2D
 signal game_over(reason: String, time: float, best: float, new_best: bool)
 
 const SAVE_PATH := "user://best.cfg"
+const GroundShader := preload("res://shaders/ground.gdshader")
+const Props := preload("res://scripts/props.gd")
 
 var elapsed := 0.0
 var is_over := false
@@ -12,7 +14,15 @@ var brazier
 
 func _ready() -> void:
 	add_to_group("kill_counter")
+	setup_ground()
 	brazier = get_tree().get_first_node_in_group("brazier")
+	var props := Props.new()
+	props.name = "Props"
+	add_child(props)
+	props.build($Ground, $Entities, brazier)
+	for herb in $HerbSpawner.get_children():
+		if Props.blocked(get_tree(), herb.global_position, 12.0):
+			herb.queue_free()
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
 		player.died.connect(_on_player_died)
@@ -20,6 +30,22 @@ func _ready() -> void:
 
 func _on_player_died() -> void:
 	end_game("THE HAZE TOOK YOU" if brazier and brazier.is_out else "YOU DIED")
+
+
+func setup_ground() -> void:
+	var noise := FastNoiseLite.new()
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	noise.frequency = 0.02
+	noise.fractal_octaves = 3
+	var texture := NoiseTexture2D.new()
+	texture.width = 256
+	texture.height = 256
+	texture.seamless = true
+	texture.noise = noise
+	var ground_material := ShaderMaterial.new()
+	ground_material.shader = GroundShader
+	ground_material.set_shader_parameter("noise_tex", texture)
+	$Ground.material = ground_material
 
 
 func add_kill() -> void:

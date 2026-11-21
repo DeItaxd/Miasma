@@ -3,6 +3,8 @@ extends Area2D
 enum State { OUT, RETURN, GROUND }
 
 const Juice := preload("res://scripts/juice.gd")
+const OutlineShader := preload("res://shaders/outline.gdshader")
+const GROUND_OUTLINE := Color(1.0, 0.85, 0.3, 1.0)
 
 var thrower: Node2D
 var direction := Vector2.RIGHT
@@ -22,14 +24,20 @@ var tint := Color.WHITE
 var state := State.OUT
 var traveled := 0.0
 var hit_bodies: Array[Object] = []
+var outline: ShaderMaterial
 
 @onready var sprite: Sprite2D = $Sprite2D
 
 
 func _ready() -> void:
+	add_to_group("thrown_scythe")
 	body_entered.connect(_on_body_entered)
 	area_entered.connect(_on_area_entered)
 	sprite.modulate = tint
+
+
+func is_grounded() -> bool:
+	return state == State.GROUND
 
 
 func _physics_process(delta: float) -> void:
@@ -107,6 +115,11 @@ func _on_area_entered(area: Area2D) -> void:
 func drop() -> void:
 	state = State.GROUND
 	sprite.rotation = randf() * TAU
+	outline = ShaderMaterial.new()
+	outline.shader = OutlineShader
+	outline.set_shader_parameter("outline_color", GROUND_OUTLINE)
+	outline.set_shader_parameter("pulse", 1.0)
+	sprite.material = outline
 	sprite.modulate = Color(0.85, 0.85, 0.85)
 
 

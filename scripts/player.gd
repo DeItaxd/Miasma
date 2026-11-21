@@ -425,6 +425,8 @@ func begin_spin(damage: int, knockback: float, radius: float, duration: float, c
 
 
 func throw_scythe() -> void:
+	if not has_scythe:
+		return
 	var toss := combo_step == 2 and (combo_timer > 0.0 or charging) and not caught_combo
 	if charging:
 		end_charge()

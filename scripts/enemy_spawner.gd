@@ -3,6 +3,7 @@ extends Node
 const ChoryScene := preload("res://scenes/chory.tscn")
 const RatScene := preload("res://scenes/rat.tscn")
 const CougherScene := preload("res://scenes/cougher.tscn")
+const Props := preload("res://scripts/props.gd")
 const WALL_TILE := Vector2i(2, 0)
 
 @export var ground_path: NodePath = ^"../Ground"
@@ -99,6 +100,8 @@ func spawn_enemy(scene: PackedScene) -> void:
 			continue
 		var cell := ground.local_to_map(ground.to_local(pos))
 		if ground.get_cell_source_id(cell) == -1 or ground.get_cell_atlas_coords(cell) == WALL_TILE:
+			continue
+		if Props.blocked(get_tree(), pos, 12.0):
 			continue
 		var enemy := scene.instantiate()
 		entities.add_child(enemy)

@@ -9,6 +9,7 @@ const DamagePopup := preload("res://scripts/damage_popup.gd")
 @export var max_radius := 288.0
 @export var miasma_damage := 1
 @export var miasma_tick := 1.0
+@export var radius_ease := 6.0
 
 @export_group("Haze Edge")
 @export var jag_amount := 16.0
@@ -23,6 +24,7 @@ const DamagePopup := preload("res://scripts/damage_popup.gd")
 
 var fuel := 0.0
 var radius := 0.0
+var target_radius := 0.0
 var is_out := false
 var zone_material: ShaderMaterial
 var tick_timer := 0.0
@@ -52,6 +54,8 @@ func _ready() -> void:
 	overlay.material = zone_material
 	player = get_tree().get_first_node_in_group("player")
 	update_radius()
+	radius = target_radius
+	zone_material.set_shader_parameter("radius", radius)
 
 
 func _physics_process(delta: float) -> void:
@@ -60,6 +64,8 @@ func _physics_process(delta: float) -> void:
 	if not is_out:
 		fuel = maxf(fuel - burn_rate * delta, 0.0)
 		update_radius()
+	radius = lerpf(radius, target_radius, 1.0 - exp(-radius_ease * delta))
+	zone_material.set_shader_parameter("radius", radius)
 	if not is_instance_valid(player):
 		return
 	if not is_out and player.herbs > 0 and player.global_position.distance_to(global_position) <= deposit_range:
@@ -106,8 +112,7 @@ func drain_fuel(amount: float) -> void:
 
 
 func update_radius() -> void:
-	radius = max_radius * sqrt(fuel / max_fuel)
-	zone_material.set_shader_parameter("radius", radius)
+	target_radius = max_radius * sqrt(fuel / max_fuel)
 	if fuel <= 0.0 and not is_out:
 		is_out = true
 		sprite.modulate = Color(0.3, 0.3, 0.3)

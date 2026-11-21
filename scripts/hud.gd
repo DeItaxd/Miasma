@@ -17,6 +17,7 @@ var last_health := -1
 var brazier
 var player
 var herb_arrow: Polygon2D
+var scythe_arrow: Polygon2D
 var combo := 0
 var combo_left := 0.0
 var combo_box: Control
@@ -88,6 +89,19 @@ func _ready() -> void:
 	herb_arrow.add_child(outline)
 	add_child(herb_arrow)
 	move_child(herb_arrow, game_over.get_index())
+	scythe_arrow = Polygon2D.new()
+	scythe_arrow.polygon = arrow.polygon
+	scythe_arrow.color = Color("ffe08a")
+	scythe_arrow.scale = Vector2(1.4, 1.4)
+	scythe_arrow.visible = false
+	var scythe_outline := Line2D.new()
+	scythe_outline.points = arrow.polygon
+	scythe_outline.closed = true
+	scythe_outline.width = 3.0
+	scythe_outline.default_color = Color(0.2, 0.12, 0.02)
+	scythe_arrow.add_child(scythe_outline)
+	add_child(scythe_arrow)
+	move_child(scythe_arrow, game_over.get_index())
 	build_combo()
 	build_pause_menu()
 	build_title()
@@ -115,6 +129,7 @@ func _process(_delta: float) -> void:
 		time_label.text = format_time(main.elapsed)
 	update_fire_alerts()
 	update_herb_arrow()
+	update_scythe_arrow()
 	update_combo(_delta)
 	if title.visible:
 		start_label.modulate.a = 0.6 + 0.4 * sin(Time.get_ticks_msec() * 0.005)
@@ -156,7 +171,7 @@ func build_title() -> void:
 		"2xM1 + M2: Reaper's Toss. Cuts through everything, comes back and drags enemies in.",
 		"A throw that hits comes back. Catch it and your next click is a finisher.",
 		"A throw that misses stays on the ground. Go pick it up.",
-		"Hit a cougher with a heavy or a spin to knock it back.",
+		"Hit a cough with a heavy or a spin to knock it back.",
 	]))
 	start_label = title_label("Click to start", 36, Color("ffc861"))
 	box.add_child(start_label)
@@ -277,6 +292,23 @@ func _on_hit_landed(count: int, heavy: bool) -> void:
 	combo_tween = create_tween().set_parallel(true)
 	combo_tween.tween_property(combo_box, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	combo_tween.tween_property(combo_box, "rotation", randf_range(-0.05, 0.05), 0.25)
+
+
+func update_scythe_arrow() -> void:
+	var scythe = get_tree().get_first_node_in_group("thrown_scythe")
+	if not is_instance_valid(scythe) or scythe.is_queued_for_deletion() or not scythe.is_grounded() or not is_instance_valid(player) or game_over.visible:
+		scythe_arrow.visible = false
+		return
+	if player.global_position.distance_to(scythe.global_position) < 40.0:
+		scythe_arrow.visible = false
+		return
+	var canvas := get_viewport().get_canvas_transform()
+	var from: Vector2 = canvas * (player.global_position + Vector2(0, -10))
+	var dir: Vector2 = (canvas * scythe.global_position - from).normalized()
+	var pulse := sin(Time.get_ticks_msec() * 0.01)
+	scythe_arrow.visible = true
+	scythe_arrow.position = from + dir * (68.0 + 8.0 * pulse)
+	scythe_arrow.rotation = dir.angle()
 
 
 func herbs_full() -> bool:

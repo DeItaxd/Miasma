@@ -1,0 +1,13 @@
+{
+  "args_summary": "write_file(path=res://shaders/tree.gdshader)",
+  "files": [
+    {
+      "backup": "res://addons/godot_mcp/cache/undo/entry_000400/files/shaders/tree.gdshader",
+      "kind": "snapshot",
+      "path": "res://shaders/tree.gdshader"
+    }
+  ],
+  "id": "000400",
+  "timestamp": 1795223137.0,
+  "tool": "write_file"
+}

@@ -1,6 +1,7 @@
 extends Node2D
 
 const HerbScene := preload("res://scenes/herb.tscn")
+const Props := preload("res://scripts/props.gd")
 const WALL_TILE := Vector2i(2, 0)
 
 @export var ground_path: NodePath = ^"../Ground"
@@ -49,6 +50,8 @@ func spawn_herb() -> void:
 				continue
 		var cell := ground.local_to_map(ground.to_local(pos))
 		if ground.get_cell_source_id(cell) == -1 or ground.get_cell_atlas_coords(cell) == WALL_TILE:
+			continue
+		if Props.blocked(get_tree(), pos, 12.0):
 			continue
 		var herb := HerbScene.instantiate()
 		add_child(herb)

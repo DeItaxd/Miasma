@@ -1,0 +1,12 @@
+{
+  "args_summary": "write_file(path=res://shaders/rock.gdshader)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://shaders/rock.gdshader"
+    }
+  ],
+  "id": "000385",
+  "timestamp": 1795222921.0,
+  "tool": "write_file"
+}

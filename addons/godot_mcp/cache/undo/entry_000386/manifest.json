@@ -1,0 +1,12 @@
+{
+  "args_summary": "write_file(path=res://shaders/tree.gdshader)",
+  "files": [
+    {
+      "kind": "created",
+      "path": "res://shaders/tree.gdshader"
+    }
+  ],
+  "id": "000386",
+  "timestamp": 1795222921.0,
+  "tool": "write_file"
+}
